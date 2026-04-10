@@ -12,6 +12,5 @@ RUN npm install
 # Copy server source
 COPY server/ .
 
-EXPOSE 3001
-
+# Railway injects PORT at runtime — do not hardcode EXPOSE
 CMD ["node", "index.js"]
