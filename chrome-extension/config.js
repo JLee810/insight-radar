@@ -5,6 +5,6 @@
  * Example: 'https://insightradar-server.up.railway.app'
  */
 export const CONFIG = {
-  SERVER_URL: 'https://insight-radar-production.up.railway.app',
+  SERVER_URL: 'https://insight-rader.info',
   DASHBOARD_URL: 'https://dashboard-jlee810s-projects.vercel.app',
 };
