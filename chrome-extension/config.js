@@ -6,5 +6,5 @@
  */
 export const CONFIG = {
   SERVER_URL: 'https://insight-rader.info',
-  DASHBOARD_URL: 'https://dashboard-jlee810s-projects.vercel.app',
+  DASHBOARD_URL: 'https://app.insight-rader.info',
 };
