@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
+  <!-- Background circle -->
+  <circle cx="64" cy="64" r="60" fill="#0A1628"/>
+
+  <!-- Radar sweep rings -->
+  <circle cx="64" cy="64" r="48" stroke="#00E5FF" stroke-width="1.5" stroke-opacity="0.15"/>
+  <circle cx="64" cy="64" r="32" stroke="#00E5FF" stroke-width="1.5" stroke-opacity="0.25"/>
+  <circle cx="64" cy="64" r="16" stroke="#00E5FF" stroke-width="1.5" stroke-opacity="0.4"/>
+
+  <!-- Crosshair lines -->
+  <line x1="64" y1="16" x2="64" y2="112" stroke="#00E5FF" stroke-width="1" stroke-opacity="0.2"/>
+  <line x1="16" y1="64" x2="112" y2="64" stroke="#00E5FF" stroke-width="1" stroke-opacity="0.2"/>
+
+  <!-- Radar sweep arc (amber) -->
+  <path d="M64 64 L64 18" stroke="#FFB300" stroke-width="2" stroke-linecap="round" opacity="0.9"/>
+  <path d="M64 64 L102 38" stroke="#FFB300" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+  <path d="M64 64 A46 46 0 0 1 64 18" stroke="url(#sweep)" stroke-width="2" fill="rgba(255,179,0,0.05)"/>
+
+  <!-- Center dot -->
+  <circle cx="64" cy="64" r="4" fill="#00E5FF"/>
+  <circle cx="64" cy="64" r="8" fill="#00E5FF" fill-opacity="0.15"/>
+
+  <!-- Blip dots -->
+  <circle cx="90" cy="38" r="3.5" fill="#FFB300"/>
+  <circle cx="90" cy="38" r="6" fill="#FFB300" fill-opacity="0.2"/>
+  <circle cx="46" cy="52" r="2.5" fill="#00E5FF" fill-opacity="0.8"/>
+  <circle cx="78" cy="72" r="2" fill="#00E5FF" fill-opacity="0.6"/>
+
+  <!-- Article lines (document icon overlay, bottom-right) -->
+  <rect x="74" y="78" width="32" height="36" rx="4" fill="#0D1F3C" stroke="#00E5FF" stroke-width="1.5" stroke-opacity="0.6"/>
+  <line x1="80" y1="88" x2="100" y2="88" stroke="#00E5FF" stroke-width="2" stroke-linecap="round" stroke-opacity="0.8"/>
+  <line x1="80" y1="96" x2="100" y2="96" stroke="#00E5FF" stroke-width="2" stroke-linecap="round" stroke-opacity="0.5"/>
+  <line x1="80" y1="104" x2="93" y2="104" stroke="#FFB300" stroke-width="2" stroke-linecap="round" stroke-opacity="0.8"/>
+
+  <defs>
+    <linearGradient id="sweep" x1="64" y1="64" x2="102" y2="18" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFB300" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#FFB300" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+</svg>

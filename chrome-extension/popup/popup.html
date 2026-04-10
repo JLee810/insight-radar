@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InsightRadar</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header>
+      <div class="logo">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00E5FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 2a14.5 14.5 0 0 0 0 20A14.5 14.5 0 0 0 12 2"/>
+          <path d="M2 12h20"/>
+        </svg>
+        <span>InsightRadar</span>
+      </div>
+      <label class="toggle" title="Auto-tracking">
+        <input type="checkbox" id="auto-track-toggle" />
+        <span class="slider"></span>
+      </label>
+    </header>
+
+    <!-- Stats row -->
+    <div class="stats-row" id="stats-row">
+      <div class="stat"><span class="stat-val" id="stat-total">—</span><span class="stat-label">Total</span></div>
+      <div class="stat"><span class="stat-val" id="stat-unread">—</span><span class="stat-label">Unread</span></div>
+      <div class="stat"><span class="stat-val" id="stat-today">—</span><span class="stat-label">Today</span></div>
+    </div>
+
+    <!-- Save current page button -->
+    <button class="btn-save" id="btn-save" style="display:none">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      Add This Page
+    </button>
+
+    <!-- Saving feedback -->
+    <div id="save-status" class="save-status" style="display:none"></div>
+
+    <!-- Recent articles -->
+    <div class="section-label">Recent Articles</div>
+    <div id="articles-list" class="articles-list">
+      <div class="loading">Loading…</div>
+    </div>
+
+    <!-- Footer actions -->
+    <div class="footer">
+      <button class="btn-ghost" id="btn-dashboard">Open Dashboard</button>
+      <button class="btn-ghost" id="btn-options">Settings</button>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

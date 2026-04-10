@@ -1,0 +1,45 @@
+import { DatabaseSync } from 'node:sqlite';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const dbPath = join(__dirname, '../server/db/insight-radar.db');
+
+const keywords = [{"keyword":"Election","category":"Politics","weight":1.0},{"keyword":"Democracy","category":"Politics","weight":1.0},{"keyword":"Legislation","category":"Politics","weight":0.95},{"keyword":"Political Party","category":"Politics","weight":0.9},{"keyword":"Governance","category":"Politics","weight":0.9},{"keyword":"Constitutional Law","category":"Politics","weight":0.85},{"keyword":"Voter Rights","category":"Politics","weight":0.85},{"keyword":"Judicial System","category":"Politics","weight":0.85},{"keyword":"Executive Order","category":"Politics","weight":0.8},{"keyword":"Parliamentary System","category":"Politics","weight":0.8},{"keyword":"Political Polarization","category":"Politics","weight":0.8},{"keyword":"Authoritarianism","category":"Politics","weight":0.8},{"keyword":"Campaign Finance","category":"Politics","weight":0.75},{"keyword":"Lobbying","category":"Politics","weight":0.75},{"keyword":"Populism","category":"Politics","weight":0.75},{"keyword":"Political Scandal","category":"Politics","weight":0.7},{"keyword":"Referendum","category":"Politics","weight":0.7},{"keyword":"Political Movement","category":"Politics","weight":0.7},{"keyword":"Domestic Policy","category":"Politics","weight":0.7},{"keyword":"Redistricting","category":"Politics","weight":0.65},{"keyword":"Gerrymandering","category":"Politics","weight":0.6},{"keyword":"Disinformation Campaign","category":"Politics","weight":0.65},{"keyword":"Impeachment","category":"Politics","weight":0.6},{"keyword":"Political Asylum","category":"Politics","weight":0.55},{"keyword":"Civic Engagement","category":"Politics","weight":0.5},{"keyword":"Term Limits","category":"Politics","weight":0.45},{"keyword":"Ranked Choice Voting","category":"Politics","weight":0.4},{"keyword":"Geopolitics","category":"Global Affairs","weight":1.0},{"keyword":"International Relations","category":"Global Affairs","weight":1.0},{"keyword":"Diplomacy","category":"Global Affairs","weight":0.95},{"keyword":"Sanctions","category":"Global Affairs","weight":0.9},{"keyword":"NATO","category":"Global Affairs","weight":0.9},{"keyword":"United Nations","category":"Global Affairs","weight":0.9},{"keyword":"Military Conflict","category":"Global Affairs","weight":0.9},{"keyword":"Trade War","category":"Global Affairs","weight":0.85},{"keyword":"Foreign Policy","category":"Global Affairs","weight":0.85},{"keyword":"Nuclear Proliferation","category":"Global Affairs","weight":0.85},{"keyword":"Territorial Dispute","category":"Global Affairs","weight":0.8},{"keyword":"Peace Negotiation","category":"Global Affairs","weight":0.8},{"keyword":"G7","category":"Global Affairs","weight":0.8},{"keyword":"G20","category":"Global Affairs","weight":0.8},{"keyword":"BRICS","category":"Global Affairs","weight":0.8},{"keyword":"Climate Diplomacy","category":"Global Affairs","weight":0.75},{"keyword":"Migration Crisis","category":"Global Affairs","weight":0.75},{"keyword":"Humanitarian Aid","category":"Global Affairs","weight":0.75},{"keyword":"International Law","category":"Global Affairs","weight":0.75},{"keyword":"Indo-Pacific Strategy","category":"Global Affairs","weight":0.7},{"keyword":"Sovereignty","category":"Global Affairs","weight":0.7},{"keyword":"Intelligence Agency","category":"Global Affairs","weight":0.65},{"keyword":"Arms Treaty","category":"Global Affairs","weight":0.65},{"keyword":"Refugee Policy","category":"Global Affairs","weight":0.6},{"keyword":"Arctic Geopolitics","category":"Global Affairs","weight":0.5},{"keyword":"Cyber Warfare","category":"Global Affairs","weight":0.6},{"keyword":"Global South","category":"Global Affairs","weight":0.55},{"keyword":"Proxy War","category":"Global Affairs","weight":0.5},{"keyword":"Income Inequality","category":"Socio-Economic","weight":1.0},{"keyword":"Inflation","category":"Socio-Economic","weight":1.0},{"keyword":"Cost of Living","category":"Socio-Economic","weight":0.95},{"keyword":"Housing Crisis","category":"Socio-Economic","weight":0.95},{"keyword":"Labor Market","category":"Socio-Economic","weight":0.9},{"keyword":"GDP Growth","category":"Socio-Economic","weight":0.9},{"keyword":"Wages","category":"Socio-Economic","weight":0.9},{"keyword":"Poverty","category":"Socio-Economic","weight":0.9},{"keyword":"Healthcare System","category":"Socio-Economic","weight":0.85},{"keyword":"Tax Policy","category":"Socio-Economic","weight":0.85},{"keyword":"Economic Recession","category":"Socio-Economic","weight":0.85},{"keyword":"Central Banking","category":"Socio-Economic","weight":0.8},{"keyword":"Public Debt","category":"Socio-Economic","weight":0.8},{"keyword":"Wealth Gap","category":"Socio-Economic","weight":0.8},{"keyword":"Social Mobility","category":"Socio-Economic","weight":0.8},{"keyword":"Supply Chain","category":"Socio-Economic","weight":0.75},{"keyword":"Energy Prices","category":"Socio-Economic","weight":0.75},{"keyword":"Food Security","category":"Socio-Economic","weight":0.75},{"keyword":"Consumer Spending","category":"Socio-Economic","weight":0.7},{"keyword":"Gig Economy","category":"Socio-Economic","weight":0.7},{"keyword":"Automation Impact on Jobs","category":"Socio-Economic","weight":0.7},{"keyword":"Middle Class Decline","category":"Socio-Economic","weight":0.65},{"keyword":"Universal Basic Income","category":"Socio-Economic","weight":0.6},{"keyword":"Cryptocurrency Regulation","category":"Socio-Economic","weight":0.55},{"keyword":"Austerity","category":"Socio-Economic","weight":0.5},{"keyword":"Deglobalization","category":"Socio-Economic","weight":0.45},{"keyword":"Shrinkflation","category":"Socio-Economic","weight":0.35},{"keyword":"Education Policy","category":"Education","weight":1.0},{"keyword":"Higher Education","category":"Education","weight":1.0},{"keyword":"Student Debt","category":"Education","weight":0.9},{"keyword":"AI in Education","category":"Education","weight":0.9},{"keyword":"Curriculum Reform","category":"Education","weight":0.9},{"keyword":"School Funding","category":"Education","weight":0.85},{"keyword":"Teacher Shortage","category":"Education","weight":0.85},{"keyword":"STEM Education","category":"Education","weight":0.85},{"keyword":"Education Inequality","category":"Education","weight":0.85},{"keyword":"Online Learning","category":"Education","weight":0.8},{"keyword":"EdTech","category":"Education","weight":0.8},{"keyword":"Workforce Development","category":"Education","weight":0.8},{"keyword":"Skill Gap","category":"Education","weight":0.8},{"keyword":"Research Funding","category":"Education","weight":0.75},{"keyword":"Academic Freedom","category":"Education","weight":0.75},{"keyword":"Vocational Training","category":"Education","weight":0.75},{"keyword":"Early Childhood Education","category":"Education","weight":0.75},{"keyword":"Standardized Testing","category":"Education","weight":0.7},{"keyword":"University Rankings","category":"Education","weight":0.7},{"keyword":"Lifelong Learning","category":"Education","weight":0.7},{"keyword":"Literacy Rate","category":"Education","weight":0.7},{"keyword":"Special Education","category":"Education","weight":0.65},{"keyword":"Digital Divide in Education","category":"Education","weight":0.65},{"keyword":"Student Mental Health","category":"Education","weight":0.6},{"keyword":"Apprenticeship Program","category":"Education","weight":0.55},{"keyword":"Open Educational Resources","category":"Education","weight":0.45},{"keyword":"Microcredentials","category":"Education","weight":0.4}];
+
+const db = new DatabaseSync(dbPath);
+
+const stmt = db.prepare(
+  'INSERT OR IGNORE INTO interests (keyword, category, weight) VALUES (?, ?, ?)'
+);
+
+let added = 0;
+let skipped = 0;
+
+const insert = db.prepare('INSERT OR IGNORE INTO interests (keyword, category, weight) VALUES (?, ?, ?)');
+
+for (const { keyword, category, weight } of keywords) {
+  const result = insert.run(keyword, category, weight);
+  if (result.changes > 0) {
+    added++;
+  } else {
+    skipped++;
+  }
+}
+
+// Summary by category
+const counts = db.prepare(`
+  SELECT category, COUNT(*) as count
+  FROM interests
+  GROUP BY category
+  ORDER BY category
+`).all();
+
+console.log(`\n✓ Import complete`);
+console.log(`  Added:   ${added}`);
+console.log(`  Skipped: ${skipped} (already existed)`);
+console.log(`\nInterests by category:`);
+for (const row of counts) {
+  console.log(`  ${row.category.padEnd(20)} ${row.count}`);
+}
+console.log(`  ${'TOTAL'.padEnd(20)} ${counts.reduce((s, r) => s + r.count, 0)}`);

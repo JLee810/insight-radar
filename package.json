@@ -1,0 +1,29 @@
+{
+  "name": "insight-radar",
+  "version": "1.0.0",
+  "description": "AI-powered website tracking and article collection tool",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"npm run server:dev\" \"npm run dashboard:dev\"",
+    "server:dev": "nodemon --watch server server/index.js",
+    "server:start": "node server/index.js",
+    "dashboard:dev": "cd dashboard && npm run dev",
+    "dashboard:build": "cd dashboard && npm run build",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "latest",
+    "cheerio": "^1.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.0",
+    "express": "^4.18.0",
+    "node-cron": "^3.0.0",
+    "node-fetch": "^3.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^8.0.0",
+    "nodemon": "^3.0.0",
+    "vitest": "latest"
+  }
+}
