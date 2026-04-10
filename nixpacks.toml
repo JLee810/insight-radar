@@ -5,4 +5,4 @@ nixPkgs = ["nodejs_22"]
 cmds = ["cd server && npm install"]
 
 [start]
-cmd = "cd server && node index.js"
+cmd = "cd server && node --experimental-sqlite index.js"
