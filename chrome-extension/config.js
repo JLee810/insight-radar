@@ -5,6 +5,6 @@
  * Example: 'https://insightradar-server.up.railway.app'
  */
 export const CONFIG = {
-  SERVER_URL: 'http://localhost:3001',
-  DASHBOARD_URL: 'http://localhost:5173',
+  SERVER_URL: 'https://insight-radar-production.up.railway.app',
+  DASHBOARD_URL: 'https://dashboard-jlee810s-projects.vercel.app',
 };
