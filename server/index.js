@@ -22,6 +22,11 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
+// Health check — registered first so Railway healthcheck responds immediately
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ success: true, data: { status: 'ok', timestamp: new Date().toISOString() } });
+});
+
 // Mount routers
 app.use('/api/articles', articlesRouter);
 app.use('/api/websites', websitesRouter);
@@ -127,11 +132,6 @@ app.get('/api/tracking-log', (req, res) => {
   } catch (err) {
     sendError(res, err.message);
   }
-});
-
-// Health check
-app.get('/api/health', (req, res) => {
-  sendSuccess(res, { status: 'ok', timestamp: new Date().toISOString() });
 });
 
 // 404 handler

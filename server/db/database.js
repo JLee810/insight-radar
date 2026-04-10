@@ -13,7 +13,12 @@ let db;
  * @returns {DatabaseSync}
  */
 export function initDatabase() {
-  const dbPath = join(__dirname, 'insight-radar.db');
+  // On Railway (and other cloud hosts), use /tmp for writable storage.
+  // Fall back to local server/db/ directory in development.
+  const dbPath = process.env.DB_PATH ||
+    (process.env.NODE_ENV === 'production'
+      ? '/tmp/insight-radar.db'
+      : join(__dirname, 'insight-radar.db'));
   db = new DatabaseSync(dbPath);
 
   // Enable WAL mode for better concurrent read performance
