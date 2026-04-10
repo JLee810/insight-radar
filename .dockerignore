@@ -1,0 +1,12 @@
+node_modules
+dashboard
+scripts
+chrome-extension
+.env
+.git
+*.md
+*.toml
+vitest.config.js
+generate-icons.js
+package.json
+package-lock.json
