@@ -141,6 +141,6 @@ app.use((req, res) => sendError(res, 'Not found', 404));
 initDatabase();
 startScheduler();
 
-app.listen(PORT, () => {
-  console.log(`InsightRadar server running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`InsightRadar server running on port ${PORT}`);
 });
