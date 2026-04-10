@@ -7,11 +7,12 @@
     "node": ">=22.0.0"
   },
   "scripts": {
-    "start": "node --experimental-sqlite index.js",
+    "start": "node index.js",
     "dev": "nodemon --watch . index.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "latest",
+    "better-sqlite3": "^11.0.0",
     "cheerio": "^1.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.0.0",
