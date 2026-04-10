@@ -41,6 +41,33 @@ router.post('/', (req, res) => {
 });
 
 /**
+ * POST /api/interests/bulk
+ * Bulk import interest keywords, skipping duplicates.
+ */
+router.post('/bulk', (req, res) => {
+  try {
+    const db = getDb();
+    const { keywords } = req.body;
+    if (!Array.isArray(keywords) || !keywords.length) return sendError(res, 'keywords array is required', 400);
+
+    const insert = db.prepare('INSERT OR IGNORE INTO interests (keyword, weight, category) VALUES (?, ?, ?)');
+    const importMany = db.transaction((items) => {
+      let added = 0, skipped = 0;
+      for (const { keyword, weight = 1.0, category } of items) {
+        const result = insert.run(keyword.toLowerCase().trim(), weight, category || null);
+        result.changes > 0 ? added++ : skipped++;
+      }
+      return { added, skipped };
+    });
+
+    const result = importMany(keywords);
+    sendSuccess(res, result);
+  } catch (err) {
+    sendError(res, err.message);
+  }
+});
+
+/**
  * DELETE /api/interests/:id
  * Remove an interest keyword.
  */
