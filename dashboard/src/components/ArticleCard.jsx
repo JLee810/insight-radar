@@ -1,4 +1,5 @@
-import { Bookmark, BookmarkCheck, ExternalLink, Trash2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Bookmark, BookmarkCheck, ExternalLink, Trash2, MessageSquare } from 'lucide-react';
 import { useUpdateArticle, useDeleteArticle } from '../hooks/useArticles.js';
 
 /**
@@ -41,11 +42,13 @@ export default function ArticleCard({ article }) {
     update.mutate({ id: article.id, is_read: !article.is_read });
   }
 
-  function toggleBookmark() {
+  function toggleBookmark(e) {
+    e.stopPropagation();
     update.mutate({ id: article.id, is_bookmarked: !article.is_bookmarked });
   }
 
-  function handleDelete() {
+  function handleDelete(e) {
+    e.stopPropagation();
     if (confirm('Delete this article?')) remove.mutate(article.id);
   }
 
@@ -65,9 +68,16 @@ export default function ArticleCard({ article }) {
 
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="font-semibold text-sm text-white leading-snug line-clamp-2 group-hover:text-cyan-400 transition-colors">
+          {/* Title — links to source article */}
+          <a
+            href={article.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-sm text-white leading-snug line-clamp-2 hover:text-cyan-400 transition-colors"
+            onClick={e => e.stopPropagation()}
+          >
             {article.title}
-          </h3>
+          </a>
           <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
             <button className="p-1 hover:text-cyan-400 transition-colors" onClick={toggleBookmark} title="Bookmark">
               {article.is_bookmarked ? <BookmarkCheck size={15} className="text-cyan-400" /> : <Bookmark size={15} />}
@@ -94,11 +104,20 @@ export default function ArticleCard({ article }) {
             <span className="text-xs text-gray-500">{article.website_name}</span>
           )}
           <span className="text-xs text-gray-600">{date}</span>
-          <div className="flex gap-1 flex-wrap">
+          <div className="flex gap-1 flex-wrap flex-1">
             {(article.ai_tags || []).slice(0, 4).map(tag => (
               <span key={tag} className="tag">{tag}</span>
             ))}
           </div>
+          {/* Debate link */}
+          <Link
+            to={`/debate/${article.id}`}
+            className="flex items-center gap-1 text-xs text-gray-500 hover:text-cyan-400 transition-colors shrink-0"
+            onClick={e => e.stopPropagation()}
+          >
+            <MessageSquare size={13} />
+            Debate
+          </Link>
         </div>
       </div>
     </article>

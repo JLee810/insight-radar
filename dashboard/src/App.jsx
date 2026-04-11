@@ -1,13 +1,17 @@
 import { useState } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider } from './context/AuthContext.jsx';
 import Header from './components/Header.jsx';
 import Dashboard from './components/Dashboard.jsx';
 import ArticleCard from './components/ArticleCard.jsx';
 import WebsiteList from './components/WebsiteList.jsx';
 import InterestTags from './components/InterestTags.jsx';
 import AIInsights from './components/AIInsights.jsx';
+import DebatePage from './pages/DebatePage.jsx';
+import SettingsPage from './pages/SettingsPage.jsx';
 import { useArticles, useCreateArticle } from './hooks/useArticles.js';
-import { LayoutGrid, Globe, Tag, Sparkles, BookMarked, Plus, X, Filter } from 'lucide-react';
+import { LayoutGrid, Globe, Tag, Sparkles, Plus, X } from 'lucide-react';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
@@ -31,7 +35,7 @@ function ArticleFeed({ searchQuery }) {
   const [filters, setFilters] = useState({ sort: 'discovered_at', order: 'DESC', limit: 20 });
   const [addUrl, setAddUrl] = useState('');
   const [showAdd, setShowAdd] = useState(false);
-  const { data, isLoading, isError } = useArticles({ ...filters, search: searchQuery });
+  const { data, isLoading, isError, refetch } = useArticles({ ...filters, search: searchQuery });
   const createArticle = useCreateArticle();
 
   async function handleAddUrl(e) {
@@ -59,6 +63,14 @@ function ArticleFeed({ searchQuery }) {
             <option value="relevance_score:DESC">Most relevant</option>
             <option value="published_at:DESC">By publish date</option>
           </select>
+          <button className="btn-ghost p-2" onClick={() => refetch()} title="Refresh">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+              <path d="M21 3v5h-5" />
+              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+              <path d="M8 16H3v5" />
+            </svg>
+          </button>
           <button className="btn-primary flex items-center gap-1" onClick={() => setShowAdd(v => !v)}>
             {showAdd ? <X size={14} /> : <Plus size={14} />}
             {showAdd ? 'Cancel' : 'Add URL'}
@@ -120,7 +132,7 @@ function ArticleFeed({ searchQuery }) {
   );
 }
 
-function AppInner() {
+function HomePage() {
   const [tab, setTab] = useState('articles');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -163,7 +175,15 @@ function AppInner() {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AppInner />
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/debate/:articleId" element={<DebatePage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

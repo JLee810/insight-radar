@@ -6,12 +6,16 @@ const __serverDir = dirname(fileURLToPath(import.meta.url));
 config({ path: join(__serverDir, '..', '.env'), override: true }); // project root
 config({ path: join(__serverDir, '.env'),        override: true }); // server/ takes final precedence
 import express from 'express';
-import cors from 'cors';
+import { helmetMiddleware, corsMiddleware, generalLimit, authLimit } from './middleware/security.js';
 import { initDatabase, getDb } from './db/database.js';
+import { runMigrations } from './db/migrations.js';
 import { sendSuccess, sendError } from './utils/helpers.js';
 import articlesRouter from './routes/articles.js';
 import websitesRouter from './routes/websites.js';
 import interestsRouter from './routes/interests.js';
+import authRouter from './routes/auth.js';
+import debateRouter from './routes/debate.js';
+import biasRouter from './routes/bias.js';
 import { analyzeArticle } from './services/ai-analyzer.js';
 import { startScheduler } from './services/scheduler.js';
 import { scrapeArticle } from './services/scraper.js';
@@ -19,8 +23,10 @@ import { scrapeArticle } from './services/scraper.js';
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors());
-app.use(express.json());
+app.use(helmetMiddleware);
+app.use(corsMiddleware);
+app.use(generalLimit);
+app.use(express.json({ limit: '50kb' }));
 
 // Health check — registered first so Railway healthcheck responds immediately
 app.get('/api/health', (req, res) => {
@@ -28,6 +34,9 @@ app.get('/api/health', (req, res) => {
 });
 
 // Mount routers
+app.use('/api/auth', authLimit, authRouter);
+app.use('/api/debate', debateRouter);
+app.use('/api/bias', biasRouter);
 app.use('/api/articles', articlesRouter);
 app.use('/api/websites', websitesRouter);
 app.use('/api/interests', interestsRouter);
@@ -137,8 +146,16 @@ app.get('/api/tracking-log', (req, res) => {
 // 404 handler
 app.use((req, res) => sendError(res, 'Not found', 404));
 
-// Initialize DB, start scheduler, then listen
+// Initialize DB, run migrations, start scheduler
 initDatabase();
+runMigrations();
+
+// Safe column additions (ALTER TABLE IF NOT EXISTS not supported in SQLite)
+try {
+  const _db = getDb();
+  _db.exec('ALTER TABLE articles ADD COLUMN bias_data TEXT');
+} catch { /* column already exists */ }
+
 startScheduler();
 
 app.listen(PORT, '0.0.0.0', () => {

@@ -15,6 +15,14 @@ async function request(path, options = {}) {
   return json.data;
 }
 
+/** Authenticated request — injects Bearer token */
+function authRequest(token, path, options = {}) {
+  return request(path, {
+    ...options,
+    headers: { Authorization: `Bearer ${token}`, ...options.headers },
+  });
+}
+
 export const api = {
   articles: {
     list: (params = {}) => request(`/articles?${new URLSearchParams(params)}`),
@@ -37,4 +45,23 @@ export const api = {
   stats: () => request('/stats'),
   analyze: (body) => request('/analyze', { method: 'POST', body }),
   trackingLog: (params = {}) => request(`/tracking-log?${new URLSearchParams(params)}`),
+  auth: {
+    register: (email, username, password) => request('/auth/register', { method: 'POST', body: { email, username, password } }),
+    login: (email, password) => request('/auth/login', { method: 'POST', body: { email, password } }),
+    logout: (refreshToken) => request('/auth/logout', { method: 'POST', body: { refreshToken } }),
+    refresh: (refreshToken) => request('/auth/refresh', { method: 'POST', body: { refreshToken } }),
+    me: (token) => authRequest(token, '/auth/me'),
+  },
+  bias: {
+    get: (articleId) => request(`/bias/${articleId}`),
+  },
+  debate: {
+    vote: (token, articleId) => authRequest(token, `/debate/${articleId}/vote`, { method: 'POST' }),
+    getThread: (articleId, token) => token
+      ? authRequest(token, `/debate/${articleId}`)
+      : request(`/debate/${articleId}`),
+    addComment: (token, articleId, body) => authRequest(token, `/debate/${articleId}/comments`, { method: 'POST', body }),
+    deleteComment: (token, commentId) => authRequest(token, `/debate/comments/${commentId}`, { method: 'DELETE' }),
+    reportComment: (token, commentId) => authRequest(token, `/debate/comments/${commentId}/report`, { method: 'POST' }),
+  },
 };
