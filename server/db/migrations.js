@@ -89,6 +89,24 @@ const migrations = [
     `,
   },
   {
+    id: 4,
+    name: 'opinions_table',
+    sql: `
+      CREATE TABLE IF NOT EXISTS opinions (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        title      TEXT    NOT NULL,
+        body       TEXT    NOT NULL,
+        tags       TEXT    NOT NULL DEFAULT '[]',
+        status     TEXT    NOT NULL DEFAULT 'published',
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_opinions_user   ON opinions(user_id);
+      CREATE INDEX IF NOT EXISTS idx_opinions_status ON opinions(status);
+    `,
+  },
+  {
     id: 3,
     name: 'bias_data_column',
     sql: `

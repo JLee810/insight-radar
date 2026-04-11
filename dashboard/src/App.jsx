@@ -10,6 +10,9 @@ import InterestTags from './components/InterestTags.jsx';
 import AIInsights from './components/AIInsights.jsx';
 import DebatePage from './pages/DebatePage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
+import AdminPage from './pages/AdminPage.jsx';
+import OpinionsPage from './pages/OpinionsPage.jsx';
+import TrendingWidget from './components/TrendingWidget.jsx';
 import { useArticles, useCreateArticle } from './hooks/useArticles.js';
 import { LayoutGrid, Globe, Tag, Sparkles, Plus, X } from 'lucide-react';
 
@@ -153,6 +156,9 @@ function HomePage() {
           {tabs.map(t => (
             <NavTab key={t.id} icon={t.icon} label={t.label} active={tab === t.id} onClick={() => setTab(t.id)} />
           ))}
+          <div className="pt-4">
+            <TrendingWidget />
+          </div>
         </aside>
 
         {/* Main content */}
@@ -181,6 +187,8 @@ export default function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/debate/:articleId" element={<DebatePage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/admin" element={<AdminPage />} />
+            <Route path="/opinions" element={<OpinionsPage />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>

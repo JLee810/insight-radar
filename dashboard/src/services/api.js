@@ -55,6 +55,20 @@ export const api = {
   bias: {
     get: (articleId) => request(`/bias/${articleId}`),
   },
+  trending: () => request('/trending'),
+  admin: {
+    stats:            (token) => authRequest(token, '/admin/stats'),
+    reportedComments: (token) => authRequest(token, '/admin/reported-comments'),
+    dismissComment:   (token, id) => authRequest(token, `/admin/comments/${id}/dismiss`, { method: 'POST' }),
+    deleteComment:    (token, id) => authRequest(token, `/admin/comments/${id}`, { method: 'DELETE' }),
+  },
+  opinions: {
+    list:   (params = {}) => request(`/opinions?${new URLSearchParams(params)}`),
+    get:    (id) => request(`/opinions/${id}`),
+    create: (token, body) => authRequest(token, '/opinions', { method: 'POST', body }),
+    update: (token, id, body) => authRequest(token, `/opinions/${id}`, { method: 'PATCH', body }),
+    delete: (token, id) => authRequest(token, `/opinions/${id}`, { method: 'DELETE' }),
+  },
   debate: {
     vote: (token, articleId) => authRequest(token, `/debate/${articleId}/vote`, { method: 'POST' }),
     getThread: (articleId, token) => token

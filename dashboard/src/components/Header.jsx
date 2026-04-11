@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Bell, Radar, LogIn, LogOut, User, Settings } from 'lucide-react';
+import { Search, Bell, Radar, LogIn, LogOut, User, Settings, PenLine, ShieldAlert } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../services/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -56,10 +56,23 @@ export default function Header({ onSearch }) {
               )}
             </button>
 
+            {/* Opinions */}
+            <Link to="/opinions" className="btn-ghost px-3 py-1.5 flex items-center gap-1.5 text-xs font-medium" title="Community Opinions">
+              <PenLine size={14} />
+              <span className="hidden sm:inline">Opinions</span>
+            </Link>
+
             {/* Settings */}
             <Link to="/settings" className="btn-ghost p-2" title="Settings">
               <Settings size={18} />
             </Link>
+
+            {/* Admin (only for admin users) */}
+            {user?.role === 'admin' && (
+              <Link to="/admin" className="btn-ghost p-2" title="Admin Panel">
+                <ShieldAlert size={18} className="text-amber-400" />
+              </Link>
+            )}
 
             {/* Auth */}
             {user ? (
