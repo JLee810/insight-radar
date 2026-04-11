@@ -33,7 +33,7 @@ app.use(express.json({ limit: '50kb' }));
 
 // Health check — registered first so Railway healthcheck responds immediately
 app.get('/api/health', (req, res) => {
-  res.status(200).json({ success: true, data: { status: 'ok', timestamp: new Date().toISOString() } });
+  res.status(200).json({ success: true, data: { status: 'ok', version: '2.0.0', timestamp: new Date().toISOString() } });
 });
 
 // Mount routers

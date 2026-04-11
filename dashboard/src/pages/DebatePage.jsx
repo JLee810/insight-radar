@@ -12,6 +12,7 @@ import {
 import { api } from '../services/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import AuthModal from '../components/AuthModal.jsx';
+import Header from '../components/Header.jsx';
 
 const TYPE_CONFIG = {
   argument:  { label: 'Argument',  color: 'text-cyan-400',   bg: 'bg-cyan-400/10',   border: 'border-cyan-400/30' },
@@ -325,11 +326,12 @@ export default function DebatePage() {
     <div className="min-h-screen bg-navy-900">
       {authMode && <AuthModal mode={authMode} onClose={() => setAuthMode(null)} />}
 
+      <Header />
       {/* Back nav */}
-      <div className="sticky top-0 z-40 bg-navy-900/80 backdrop-blur border-b border-white/5 px-6 py-3">
+      <div className="bg-navy-900/60 border-b border-white/5 px-6 py-2">
         <div className="max-w-3xl mx-auto flex items-center gap-3">
           <button className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors" onClick={() => navigate('/')}>
-            <ArrowLeft size={16} /> Back to InsightRadar
+            <ArrowLeft size={16} /> Back to feed
           </button>
           <span className="text-gray-700">|</span>
           <span className="text-xs text-gray-500">Debate Thread</span>

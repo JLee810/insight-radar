@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, User, Shield, Bell, Info } from 'lucide-react';
+import Header from '../components/Header.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 
 function Section({ icon: Icon, title, children }) {
@@ -31,11 +32,11 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-navy-900">
-      {/* Nav */}
-      <div className="sticky top-0 z-40 bg-navy-900/80 backdrop-blur border-b border-white/5 px-6 py-3">
+      <Header />
+      <div className="bg-navy-900/60 border-b border-white/5 px-6 py-2">
         <div className="max-w-2xl mx-auto flex items-center gap-3">
           <Link to="/" className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors">
-            <ArrowLeft size={16} /> Back to InsightRadar
+            <ArrowLeft size={16} /> Back
           </Link>
           <span className="text-gray-700">|</span>
           <span className="text-xs text-gray-500">Settings</span>

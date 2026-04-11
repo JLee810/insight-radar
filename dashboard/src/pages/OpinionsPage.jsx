@@ -8,6 +8,7 @@ import { PenLine, User, Calendar, Tag, ArrowLeft, X, Send, Trash2 } from 'lucide
 import { api } from '../services/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import AuthModal from '../components/AuthModal.jsx';
+import Header from '../components/Header.jsx';
 
 /** Individual opinion card */
 function OpinionCard({ opinion, currentUser, accessToken, onDelete }) {
@@ -148,11 +149,11 @@ export default function OpinionsPage() {
     <div className="min-h-screen bg-navy-900">
       {authMode && <AuthModal mode={authMode} onClose={() => setAuthMode(null)} />}
 
-      {/* Header bar */}
-      <div className="sticky top-0 z-40 bg-navy-900/80 backdrop-blur border-b border-white/5 px-6 py-3">
+      <Header />
+      <div className="bg-navy-900/60 border-b border-white/5 px-6 py-2">
         <div className="max-w-3xl mx-auto flex items-center gap-3">
           <Link to="/" className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors">
-            <ArrowLeft size={16} /> Back to InsightRadar
+            <ArrowLeft size={16} /> Back to feed
           </Link>
           <span className="text-gray-700">|</span>
           <PenLine size={14} className="text-cyan-400" />

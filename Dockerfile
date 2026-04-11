@@ -5,11 +5,16 @@ RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt
 
 WORKDIR /app
 
-# Copy and install dependencies first (layer cache friendly)
-COPY server/package.json ./
-RUN npm install
+# Copy package files first for layer caching
+COPY server/package.json server/package-lock.json* ./
 
-# Copy server source
+# Install dependencies (ci = clean install from lockfile if present)
+RUN npm ci --ignore-scripts || npm install --ignore-scripts
+
+# Rebuild native modules for this platform
+RUN npm rebuild better-sqlite3
+
+# Copy all server source files
 COPY server/ .
 
 EXPOSE 3001
