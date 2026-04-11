@@ -43,9 +43,13 @@ router.post('/register', [
     if (existing) return sendError(res, 'Email or username already taken', 409);
 
     const password_hash = bcrypt.hashSync(password, 12);
+    // Auto-grant admin role if email matches ADMIN_EMAIL env var
+    const adminEmails = (process.env.ADMIN_EMAIL || '').toLowerCase().split(',').map(e => e.trim()).filter(Boolean);
+    const role = adminEmails.includes(email.toLowerCase()) ? 'admin' : 'user';
+
     const result = db.prepare(
-      'INSERT INTO users (email, username, password_hash) VALUES (?, ?, ?)'
-    ).run(email, username, password_hash);
+      'INSERT INTO users (email, username, password_hash, role) VALUES (?, ?, ?, ?)'
+    ).run(email, username, password_hash, role);
 
     const user = db.prepare('SELECT id, email, username, role, created_at FROM users WHERE id = ?').get(result.lastInsertRowid);
     const accessToken = signAccessToken(user);
@@ -156,6 +160,30 @@ router.get('/me', requireAuth, (req, res) => {
     const user = db.prepare('SELECT id, email, username, role, created_at FROM users WHERE id = ?').get(req.user.id);
     if (!user) return sendError(res, 'User not found', 404);
     sendSuccess(res, user);
+  } catch (err) {
+    sendError(res, err.message);
+  }
+});
+
+/**
+ * POST /api/auth/make-admin
+ * Promotes a user to admin using the ADMIN_SECRET env var.
+ * Body: { email, secret }
+ */
+router.post('/make-admin', (req, res) => {
+  const { email, secret } = req.body;
+  const adminSecret = process.env.ADMIN_SECRET;
+  if (!adminSecret) return sendError(res, 'Admin promotion not configured', 403);
+  if (!secret || secret !== adminSecret) return sendError(res, 'Invalid secret', 403);
+
+  try {
+    const db = getDb();
+    const user = db.prepare('SELECT id FROM users WHERE email = ?').get(
+      email?.toLowerCase?.() ?? ''
+    );
+    if (!user) return sendError(res, 'User not found', 404);
+    db.prepare('UPDATE users SET role = ? WHERE id = ?').run('admin', user.id);
+    sendSuccess(res, { promoted: true });
   } catch (err) {
     sendError(res, err.message);
   }
