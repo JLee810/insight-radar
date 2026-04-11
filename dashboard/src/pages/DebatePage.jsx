@@ -36,7 +36,7 @@ function CommentCard({ comment, onReply, onDelete, onReport, currentUser }) {
             <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${cfg.bg} ${cfg.color}`}>
               {cfg.label}
             </span>
-            <span className="text-xs font-medium text-white">{comment.username}</span>
+            <Link to={`/profile/${comment.username}`} className="text-xs font-medium text-white hover:text-cyan-400 transition-colors">{comment.username}</Link>
             {comment.user_role === 'admin' && (
               <span className="text-xs text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded">Admin</span>
             )}

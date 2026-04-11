@@ -35,9 +35,13 @@ function OpinionCard({ opinion, currentUser, accessToken, onDelete }) {
       <p className="text-sm text-gray-400 leading-relaxed">{opinion.excerpt}</p>
 
       <div className="flex items-center gap-3 flex-wrap">
-        <span className="flex items-center gap-1 text-xs text-gray-500">
+        <Link
+          to={`/profile/${opinion.author}`}
+          className="flex items-center gap-1 text-xs text-gray-500 hover:text-cyan-400 transition-colors"
+          onClick={e => e.stopPropagation()}
+        >
           <User size={11} /> {opinion.author}
-        </span>
+        </Link>
         <span className="flex items-center gap-1 text-xs text-gray-600">
           <Calendar size={11} /> {date}
         </span>

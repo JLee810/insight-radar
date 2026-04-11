@@ -156,10 +156,10 @@ export default function Header({ onSearch }) {
             {/* Auth */}
             {user ? (
               <div className="flex items-center gap-2 ml-1 pl-2 border-l border-white/10">
-                <span className="text-sm text-gray-400 hidden md:flex items-center gap-1">
+                <Link to={`/profile/${user.username}`} className="text-sm text-gray-400 hidden md:flex items-center gap-1 hover:text-white transition-colors">
                   <User size={13} />
                   {user.username}
-                </span>
+                </Link>
                 <button
                   className="btn-ghost p-2 text-gray-400 hover:text-red-400"
                   onClick={logout}
