@@ -1,0 +1,31 @@
+name: Deploy Dashboard to Vercel
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'dashboard/**'
+      - '.github/workflows/deploy.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: dashboard/package-lock.json
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Deploy to Vercel
+        working-directory: dashboard
+        run: vercel --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: team_dF6RbXNpT6PkAxtjM2nVqS4K
+          VERCEL_PROJECT_ID: prj_hsrT8J0GWevB8XKD02R6b9zbkzWM
