@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3';
-import { readFileSync } from 'fs';
+import { readFileSync, mkdirSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
@@ -17,6 +17,10 @@ export function initDatabase() {
     (process.env.NODE_ENV === 'production'
       ? '/tmp/insight-radar.db'
       : join(__dirname, 'insight-radar.db'));
+
+  // Create directory if it doesn't exist (needed for mounted volumes)
+  const dbDir = dirname(dbPath);
+  mkdirSync(dbDir, { recursive: true });
 
   db = new Database(dbPath);
   db.pragma('journal_mode = WAL');
