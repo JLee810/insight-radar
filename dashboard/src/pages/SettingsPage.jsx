@@ -1,7 +1,7 @@
 /**
  * SettingsPage — account info, change password, preferences, security.
  */
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, User, Shield, Bell, Info, Copy, Check, KeyRound, LogOut } from 'lucide-react';
 import Header from '../components/Header.jsx';
@@ -51,15 +51,21 @@ function InfoRow({ label, value, copyable }) {
 
 /** Change password form */
 function ChangePasswordForm({ accessToken }) {
-  const [current, setCurrent] = useState('');
-  const [next, setNext] = useState('');
-  const [confirm, setConfirm] = useState('');
+  const currentRef = useRef(null);
+  const nextRef = useRef(null);
+  const confirmRef = useRef(null);
   const [status, setStatus] = useState(null); // null | 'loading' | 'success' | 'error'
   const [error, setError] = useState('');
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
+    // Read directly from DOM to bypass autofill/React state sync issues
+    const current = currentRef.current.value;
+    const next = nextRef.current.value;
+    const confirm = confirmRef.current.value;
+
+    if (!current) { setError('Current password is required'); return; }
     if (next !== confirm) { setError('New passwords do not match'); return; }
     if (next.length < 8) { setError('New password must be at least 8 characters'); return; }
 
@@ -67,7 +73,9 @@ function ChangePasswordForm({ accessToken }) {
     try {
       await api.auth.changePassword(accessToken, current, next);
       setStatus('success');
-      setCurrent(''); setNext(''); setConfirm('');
+      currentRef.current.value = '';
+      nextRef.current.value = '';
+      confirmRef.current.value = '';
       setTimeout(() => setStatus(null), 3000);
     } catch (err) {
       setError(err.message);
@@ -78,31 +86,28 @@ function ChangePasswordForm({ accessToken }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <input
+        ref={currentRef}
         className="input w-full"
         type="password"
         placeholder="Current password"
         autoComplete="current-password"
-        value={current}
-        onChange={e => setCurrent(e.target.value)}
         required
       />
       <input
+        ref={nextRef}
         className="input w-full"
         type="password"
         placeholder="New password (min 8 characters)"
         autoComplete="new-password"
-        value={next}
-        onChange={e => setNext(e.target.value)}
         required
         minLength={8}
       />
       <input
+        ref={confirmRef}
         className="input w-full"
         type="password"
         placeholder="Confirm new password"
         autoComplete="new-password"
-        value={confirm}
-        onChange={e => setConfirm(e.target.value)}
         required
       />
 
