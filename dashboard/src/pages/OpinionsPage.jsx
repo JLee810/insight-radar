@@ -92,7 +92,7 @@ function WriteForm({ accessToken, onSuccess, onCancel }) {
           className="input w-full"
           placeholder="Title (5–200 characters)"
           value={title}
-          onChange={e => setTitle(e.target.value)}
+          onChange={e => { setTitle(e.target.value); setError(''); }}
           required
           minLength={5}
           maxLength={200}
@@ -102,7 +102,7 @@ function WriteForm({ accessToken, onSuccess, onCancel }) {
           rows={10}
           placeholder="Write your opinion here… (minimum 50 characters)"
           value={body}
-          onChange={e => setBody(e.target.value)}
+          onChange={e => { setBody(e.target.value); setError(''); }}
           required
           minLength={50}
           maxLength={50000}
