@@ -51,6 +51,13 @@ export function formatArticle(row) {
  * @param {object} row
  * @returns {object}
  */
+/**
+ * Parse JSON safely — alias for safeJsonParse for backwards compatibility.
+ */
+export function tryParse(val, fallback = null) {
+  return safeJsonParse(val, fallback);
+}
+
 export function formatWebsite(row) {
   return {
     ...row,

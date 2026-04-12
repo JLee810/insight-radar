@@ -37,7 +37,7 @@ router.get('/:articleId', async (req, res) => {
     const biasResult = await analyzeBias({
       title: article.title,
       content: article.content || '',
-      source: article.source_name || '',
+      source: article.website_name || '',
     });
 
     // Cache in articles table

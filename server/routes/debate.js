@@ -9,7 +9,7 @@
 import { Router } from 'express';
 import { body, validationResult } from 'express-validator';
 import { getDb } from '../db/database.js';
-import { sendSuccess, sendError } from '../utils/helpers.js';
+import { sendSuccess, sendError, tryParse } from '../utils/helpers.js';
 import { requireAuth, optionalAuth } from '../middleware/auth.js';
 import { commentLimit } from '../middleware/security.js';
 
@@ -38,19 +38,21 @@ router.post('/:articleId/vote', requireAuth, (req, res) => {
       throw e;
     }
 
-    // Upsert debate thread
-    const thread = db.prepare('SELECT * FROM debate_threads WHERE article_id = ?').get(articleId);
-    const voteCount = db.prepare('SELECT COUNT(*) as c FROM votes WHERE article_id = ?').get(articleId).c;
-
-    if (!thread) {
-      db.prepare('INSERT INTO debate_threads (article_id, vote_count) VALUES (?, ?)').run(articleId, voteCount);
-    } else {
-      const newStatus = voteCount >= VOTE_THRESHOLD && thread.status === 'voting' ? 'open' : thread.status;
-      const openedAt = newStatus === 'open' && !thread.opened_at ? new Date().toISOString() : thread.opened_at;
-      db.prepare('UPDATE debate_threads SET vote_count = ?, status = ?, opened_at = ? WHERE article_id = ?')
-        .run(voteCount, newStatus, openedAt, articleId);
-    }
-
+    // Upsert debate thread inside a transaction to prevent race conditions
+    const upsertThread = db.transaction(() => {
+      const voteCount = db.prepare('SELECT COUNT(*) as c FROM votes WHERE article_id = ?').get(articleId).c;
+      const thread = db.prepare('SELECT * FROM debate_threads WHERE article_id = ?').get(articleId);
+      if (!thread) {
+        db.prepare('INSERT OR IGNORE INTO debate_threads (article_id, vote_count) VALUES (?, ?)').run(articleId, voteCount);
+      } else {
+        const newStatus = voteCount >= VOTE_THRESHOLD && thread.status === 'voting' ? 'open' : thread.status;
+        const openedAt = newStatus === 'open' && !thread.opened_at ? new Date().toISOString() : thread.opened_at;
+        db.prepare('UPDATE debate_threads SET vote_count = ?, status = ?, opened_at = ? WHERE article_id = ?')
+          .run(voteCount, newStatus, openedAt, articleId);
+      }
+      return db.prepare('SELECT COUNT(*) as c FROM votes WHERE article_id = ?').get(articleId).c;
+    });
+    const voteCount = upsertThread();
     const updated = db.prepare('SELECT * FROM debate_threads WHERE article_id = ?').get(articleId);
     sendSuccess(res, { voteCount, thread: updated });
   } catch (err) {
@@ -200,9 +202,5 @@ router.post('/comments/:id/report', requireAuth, (req, res) => {
     sendError(res, err.message);
   }
 });
-
-function tryParse(val, fallback) {
-  try { return JSON.parse(val); } catch { return fallback; }
-}
 
 export default router;

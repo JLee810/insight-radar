@@ -43,7 +43,7 @@ export default function ArticleModal({ article, onClose }) {
     window.addEventListener('keydown', handler);
     if (!article.is_read) update.mutate({ id: article.id, is_read: true });
     return () => window.removeEventListener('keydown', handler);
-  }, [onClose]);
+  }, [onClose, article.id, article.is_read]);
 
   function toggleBookmark(e) {
     e.stopPropagation();

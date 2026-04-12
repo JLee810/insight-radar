@@ -184,6 +184,10 @@ router.post('/change-password', requireAuth, [
     const valid = bcrypt.compareSync(req.body.currentPassword, user.password_hash);
     if (!valid) return sendError(res, 'Current password is incorrect', 401);
 
+    if (req.body.currentPassword === req.body.newPassword) {
+      return sendError(res, 'New password must be different from current password', 400);
+    }
+
     const newHash = bcrypt.hashSync(req.body.newPassword, 12);
     db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(newHash, user.id);
 

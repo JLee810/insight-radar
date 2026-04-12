@@ -3,7 +3,7 @@
  * Sections: Article header, AI Analysis, Vote panel, Comments, Comment form, Bias panel (stub)
  */
 import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft, ExternalLink, ThumbsUp, MessageSquare,

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { FileText, Globe, Star, BookMarked, TrendingUp, Eye } from 'lucide-react';
+import { FileText, Globe, Star, Bookmark, TrendingUp, Eye } from 'lucide-react';
 import { api } from '../services/api.js';
 
 /**
@@ -47,7 +47,7 @@ export default function Dashboard() {
         <StatCard icon={FileText} label="Total Articles" value={stats?.totalArticles} />
         <StatCard icon={TrendingUp} label="Discovered Today" value={stats?.articlesToday} accent="green" />
         <StatCard icon={Eye} label="Unread" value={stats?.unreadCount} accent="amber" />
-        <StatCard icon={BookMarked} label="Bookmarked" value={stats?.bookmarkedCount} accent="purple" />
+        <StatCard icon={Bookmark} label="Bookmarked" value={stats?.bookmarkedCount} accent="purple" />
         <StatCard icon={Star} label="Avg Relevance" value={stats?.avgRelevance ? `${stats.avgRelevance}%` : '—'} accent="amber" />
         <StatCard icon={Globe} label="Active Sites" value={stats?.websiteCount} />
       </div>

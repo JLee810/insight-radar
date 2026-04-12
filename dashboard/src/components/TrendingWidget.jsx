@@ -7,7 +7,7 @@ import { TrendingUp, MessageSquare, ThumbsUp } from 'lucide-react';
 import { api } from '../services/api.js';
 
 export default function TrendingWidget() {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ['trending'],
     queryFn: api.trending,
     refetchInterval: 60_000,
@@ -27,6 +27,10 @@ export default function TrendingWidget() {
             <div key={i} className="h-10 bg-white/5 rounded animate-pulse" />
           ))}
         </div>
+      )}
+
+      {isError && (
+        <p className="text-xs text-red-400 text-center py-2">Failed to load trending.</p>
       )}
 
       {data && data.length > 0 && (
