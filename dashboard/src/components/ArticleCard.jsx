@@ -55,6 +55,13 @@ export default function ArticleCard({ article }) {
     ? new Date(article.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     : new Date(article.discovered_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
+  // Reading time estimate: word count of content or summary / 200 wpm
+  const readingMinutes = (() => {
+    const text = article.content || article.summary || '';
+    const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
+    return Math.max(1, Math.ceil(wordCount / 200));
+  })();
+
   return (
     <>
       <article
@@ -98,6 +105,7 @@ export default function ArticleCard({ article }) {
               <span className="text-xs text-gray-500">{article.website_name}</span>
             )}
             <span className="text-xs text-gray-600">{date}</span>
+            <span className="text-xs text-gray-600">~{readingMinutes} min read</span>
             <div className="flex gap-1 flex-wrap flex-1">
               {(article.ai_tags || []).slice(0, 4).map(tag => (
                 <span key={tag} className="tag">{tag}</span>

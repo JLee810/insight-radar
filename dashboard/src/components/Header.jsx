@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Bell, Radar, LogIn, LogOut, User, Settings, PenLine, ShieldAlert, X } from 'lucide-react';
+import { Search, Bell, Radar, LogIn, LogOut, User, Settings, PenLine, ShieldAlert, X, Bookmark, Sun, Moon } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../services/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -60,6 +60,35 @@ function NotificationPanel({ stats, onClose }) {
 }
 
 /**
+ * Persist and apply dark/light theme preference.
+ * Dark mode (default) = `dark` class on <html>.
+ * Light mode = `light` class on <html>.
+ * @returns {{ isDark: boolean, toggle: () => void }}
+ */
+function useTheme() {
+  const [isDark, setIsDark] = useState(() => {
+    const stored = localStorage.getItem('theme');
+    // Default to dark if no preference stored
+    return stored !== 'light';
+  });
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (isDark) {
+      root.classList.add('dark');
+      root.classList.remove('light');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      root.classList.remove('dark');
+      root.classList.add('light');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [isDark]);
+
+  return { isDark, toggle: () => setIsDark(v => !v) };
+}
+
+/**
  * Top navigation bar — logo (home), search, opinions, settings, auth.
  * @param {{ onSearch?: (q: string) => void }} props
  */
@@ -67,6 +96,7 @@ export default function Header({ onSearch }) {
   const [query, setQuery] = useState('');
   const [authModal, setAuthModal] = useState(null); // 'login' | 'register' | null
   const [showNotif, setShowNotif] = useState(false);
+  const { isDark, toggle: toggleTheme } = useTheme();
   const navigate = useNavigate();
   const { data: stats } = useQuery({
     queryKey: ['stats'],
@@ -113,6 +143,25 @@ export default function Header({ onSearch }) {
           </form>
 
           <div className="flex items-center gap-1 ml-auto">
+
+            {/* Search page link */}
+            <Link to="/search" className="btn-ghost p-2" title="Search articles">
+              <Search size={18} />
+            </Link>
+
+            {/* Bookmarks link */}
+            <Link to="/bookmarks" className="btn-ghost p-2" title="Bookmarks">
+              <Bookmark size={18} />
+            </Link>
+
+            {/* Dark/Light mode toggle */}
+            <button
+              className="btn-ghost p-2"
+              onClick={toggleTheme}
+              title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {isDark ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
 
             {/* Notification bell */}
             <div className="relative">

@@ -13,6 +13,8 @@ import SettingsPage from './pages/SettingsPage.jsx';
 import AdminPage from './pages/AdminPage.jsx';
 import OpinionsPage from './pages/OpinionsPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
+import SearchPage from './pages/SearchPage.jsx';
+import BookmarksPage from './pages/BookmarksPage.jsx';
 import TrendingWidget from './components/TrendingWidget.jsx';
 import { useArticles, useCreateArticle } from './hooks/useArticles.js';
 import { LayoutGrid, Globe, Tag, Sparkles, Plus, X } from 'lucide-react';
@@ -191,6 +193,8 @@ export default function App() {
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/opinions" element={<OpinionsPage />} />
             <Route path="/profile/:username" element={<ProfilePage />} />
+            <Route path="/search" element={<SearchPage />} />
+            <Route path="/bookmarks" element={<BookmarksPage />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>
