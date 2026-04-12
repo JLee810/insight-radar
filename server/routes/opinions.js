@@ -63,8 +63,8 @@ router.get('/:id', optionalAuth, (req, res) => {
 });
 
 const opinionValidation = [
-  body('title').trim().isLength({ min: 5, max: 200 }).withMessage('Title must be 5–200 characters'),
-  body('body').trim().isLength({ min: 50, max: 50000 }).withMessage('Body must be 50–50,000 characters'),
+  body('title').trim().isLength({ min: 3, max: 200 }).withMessage('Title must be 3–200 characters'),
+  body('body').trim().isLength({ min: 10, max: 50000 }).withMessage('Body must be at least 10 characters'),
   body('tags').optional().isArray({ max: 10 }).withMessage('Max 10 tags'),
   body('tags.*').optional().trim().isLength({ min: 1, max: 30 }),
 ];

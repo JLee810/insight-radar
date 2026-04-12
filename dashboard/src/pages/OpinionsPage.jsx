@@ -73,8 +73,12 @@ function WriteForm({ accessToken, onSuccess, onCancel }) {
   function handleSubmit(e) {
     e.preventDefault();
     setError('');
+    const trimmedTitle = title.trim();
+    const trimmedBody = body.trim();
+    if (trimmedTitle.length < 3) { setError('Title must be at least 3 characters'); return; }
+    if (trimmedBody.length < 10) { setError('Body must be at least 10 characters'); return; }
     const tags = tagsInput.split(',').map(t => t.trim()).filter(Boolean).slice(0, 10);
-    createMutation.mutate({ title: title.trim(), body: body.trim(), tags });
+    createMutation.mutate({ title: trimmedTitle, body: trimmedBody, tags });
   }
 
   return (
