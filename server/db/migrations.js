@@ -159,6 +159,30 @@ const migrations = [
       DROP TABLE IF EXISTS _dummy_migration7;
     `,
   },
+  {
+    id: 8,
+    name: 'opinion_likes_and_password_reset',
+    sql: `
+      CREATE TABLE IF NOT EXISTS opinion_likes (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        opinion_id INTEGER NOT NULL REFERENCES opinions(id) ON DELETE CASCADE,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, opinion_id)
+      );
+      CREATE INDEX IF NOT EXISTS idx_opinion_likes_opinion ON opinion_likes(opinion_id);
+
+      CREATE TABLE IF NOT EXISTS password_reset_tokens (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        token_hash TEXT    NOT NULL UNIQUE,
+        expires_at DATETIME NOT NULL,
+        used       BOOLEAN NOT NULL DEFAULT 0,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_reset_tokens_user ON password_reset_tokens(user_id);
+    `,
+  },
 ];
 
 /**

@@ -3,17 +3,25 @@
  * Route: /opinions/:id
  */
 import { useParams, Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, User, Calendar, Tag, PenLine } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ArrowLeft, User, Calendar, Tag, PenLine, Heart } from 'lucide-react';
 import { api } from '../services/api.js';
+import { useAuth } from '../context/AuthContext.jsx';
 import Header from '../components/Header.jsx';
 
 export default function OpinionDetailPage() {
   const { id } = useParams();
+  const { user, accessToken } = useAuth();
+  const qc = useQueryClient();
 
   const { data: opinion, isLoading, isError } = useQuery({
     queryKey: ['opinion', id],
     queryFn: () => api.opinions.get(id),
+  });
+
+  const likeMutation = useMutation({
+    mutationFn: () => api.opinions.like(accessToken, id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['opinion', id] }),
   });
 
   if (isLoading) return (
@@ -77,15 +85,21 @@ export default function OpinionDetailPage() {
               )}
             </div>
 
-            {opinion.tags?.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {opinion.tags.map(t => (
-                  <Link key={t} to={`/tag/${encodeURIComponent(t)}`} className="tag hover:border-cyan-400/40 hover:text-cyan-400 transition-colors">
-                    <Tag size={10} className="inline mr-1" />{t}
-                  </Link>
-                ))}
-              </div>
-            )}
+            <div className="flex items-center gap-3 flex-wrap">
+              {opinion.tags?.map(t => (
+                <Link key={t} to={`/tag/${encodeURIComponent(t)}`} className="tag hover:border-cyan-400/40 hover:text-cyan-400 transition-colors">
+                  <Tag size={10} className="inline mr-1" />{t}
+                </Link>
+              ))}
+              <button
+                className={`flex items-center gap-1.5 text-sm transition-colors ml-auto ${opinion.hasLiked ? 'text-rose-400' : 'text-gray-500 hover:text-rose-400'}`}
+                onClick={() => { if (!user) return; likeMutation.mutate(); }}
+                title={user ? (opinion.hasLiked ? 'Unlike' : 'Like') : 'Sign in to like'}
+              >
+                <Heart size={15} className={opinion.hasLiked ? 'fill-rose-400' : ''} />
+                <span>{opinion.like_count > 0 ? opinion.like_count : ''} {opinion.hasLiked ? 'Liked' : 'Like'}</span>
+              </button>
+            </div>
 
             <div className="border-b border-white/5" />
           </div>

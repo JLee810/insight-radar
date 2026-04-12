@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
+import { api } from './services/api.js';
 import { AuthProvider } from './context/AuthContext.jsx';
 import Header from './components/Header.jsx';
 import Dashboard from './components/Dashboard.jsx';
@@ -17,6 +18,11 @@ import ProfilePage from './pages/ProfilePage.jsx';
 import SearchPage from './pages/SearchPage.jsx';
 import BookmarksPage from './pages/BookmarksPage.jsx';
 import TagPage from './pages/TagPage.jsx';
+import NotFoundPage from './pages/NotFoundPage.jsx';
+import ResetPasswordPage from './pages/ResetPasswordPage.jsx';
+import HistoryPage from './pages/HistoryPage.jsx';
+import ErrorBoundary from './components/ErrorBoundary.jsx';
+import { useAuth } from './context/AuthContext.jsx';
 import TrendingWidget from './components/TrendingWidget.jsx';
 import { useArticles, useCreateArticle } from './hooks/useArticles.js';
 import { LayoutGrid, Globe, Tag, Sparkles, Plus, X } from 'lucide-react';
@@ -165,12 +171,73 @@ function ArticleFeed({ searchQuery }) {
   );
 }
 
+/** For You feed — articles filtered by user's interest keywords */
+function ForYouFeed() {
+  const { accessToken } = useAuth();
+  const { data: interests } = useQuery({
+    queryKey: ['interests', accessToken],
+    queryFn: () => api.interests.list(accessToken),
+    enabled: !!accessToken,
+    staleTime: 60_000,
+  });
+
+  const keywords = (interests || []).map(i => i.keyword);
+  const searchQuery = keywords.slice(0, 3).join(' ');
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['articles', 'foryou', searchQuery],
+    queryFn: () => api.articles.list({ search: searchQuery, sort: 'relevance_score', order: 'DESC', limit: 20 }),
+    enabled: keywords.length > 0,
+    staleTime: 60_000,
+  });
+
+  if (!accessToken) return (
+    <div className="card text-center py-12 text-gray-500">
+      <Sparkles size={32} className="mx-auto mb-3 opacity-30" />
+      <p>Sign in to see personalized articles based on your interests.</p>
+    </div>
+  );
+
+  if (keywords.length === 0) return (
+    <div className="card text-center py-12 text-gray-500">
+      <Tag size={32} className="mx-auto mb-3 opacity-30" />
+      <p>Add interest keywords in the <strong className="text-white">Interests</strong> tab to get personalized articles.</p>
+    </div>
+  );
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <h2 className="font-semibold text-white">For You</h2>
+        <div className="flex flex-wrap gap-1">
+          {keywords.slice(0, 5).map(k => <span key={k} className="tag text-xs">{k}</span>)}
+        </div>
+      </div>
+      {isLoading && (
+        <div className="space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => <div key={i} className="card h-24 animate-pulse bg-white/5" />)}
+        </div>
+      )}
+      {!isLoading && data?.articles?.length === 0 && (
+        <div className="card text-center py-10 text-gray-500">
+          <p>No articles matched your interests yet. Add more websites or keywords.</p>
+        </div>
+      )}
+      <div className="space-y-3">
+        {data?.articles?.map(a => <ArticleCard key={a.id} article={a} />)}
+      </div>
+    </div>
+  );
+}
+
 function HomePage() {
   const [tab, setTab] = useState('articles');
   const [searchQuery, setSearchQuery] = useState('');
+  const { user } = useAuth();
 
   const tabs = [
     { id: 'articles', icon: LayoutGrid, label: 'Articles' },
+    { id: 'foryou', icon: Sparkles, label: 'For You' },
     { id: 'websites', icon: Globe, label: 'Websites' },
     { id: 'interests', icon: Tag, label: 'Interests' },
     { id: 'insights', icon: Sparkles, label: 'AI Insights' },
@@ -199,6 +266,7 @@ function HomePage() {
               <ArticleFeed searchQuery={searchQuery} />
             </>
           )}
+          {tab === 'foryou' && <ForYouFeed />}
           {tab === 'websites' && <WebsiteList />}
           {tab === 'interests' && <InterestTags />}
           {tab === 'insights' && <AIInsights />}
@@ -210,6 +278,7 @@ function HomePage() {
 
 export default function App() {
   return (
+    <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <BrowserRouter>
@@ -224,9 +293,13 @@ export default function App() {
             <Route path="/search" element={<SearchPage />} />
             <Route path="/bookmarks" element={<BookmarksPage />} />
             <Route path="/tag/:tag" element={<TagPage />} />
+            <Route path="/history" element={<HistoryPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>
     </QueryClientProvider>
+    </ErrorBoundary>
   );
 }

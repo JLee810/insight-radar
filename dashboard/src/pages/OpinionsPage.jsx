@@ -4,14 +4,14 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { PenLine, User, Calendar, Tag, ArrowLeft, X, Send, Trash2 } from 'lucide-react';
+import { PenLine, User, Calendar, Tag, ArrowLeft, X, Send, Trash2, Heart } from 'lucide-react';
 import { api } from '../services/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import AuthModal from '../components/AuthModal.jsx';
 import Header from '../components/Header.jsx';
 
 /** Individual opinion card */
-function OpinionCard({ opinion, currentUser, accessToken, onDelete }) {
+function OpinionCard({ opinion, currentUser, accessToken, onDelete, onLike }) {
   const date = new Date(opinion.created_at).toLocaleDateString('en-US', {
     month: 'long', day: 'numeric', year: 'numeric',
   });
@@ -45,8 +45,15 @@ function OpinionCard({ opinion, currentUser, accessToken, onDelete }) {
         <span className="flex items-center gap-1 text-xs text-gray-600">
           <Calendar size={11} /> {date}
         </span>
+        <button
+          className={`flex items-center gap-1 text-xs transition-colors ${opinion.hasLiked ? 'text-rose-400' : 'text-gray-500 hover:text-rose-400'}`}
+          onClick={() => onLike(opinion.id)}
+        >
+          <Heart size={11} className={opinion.hasLiked ? 'fill-rose-400' : ''} />
+          {opinion.like_count > 0 && opinion.like_count}
+        </button>
         {opinion.tags.slice(0, 5).map(t => (
-          <span key={t} className="tag">{t}</span>
+          <Link key={t} to={`/tag/${encodeURIComponent(t)}`} className="tag hover:border-cyan-400/40 hover:text-cyan-400 transition-colors">{t}</Link>
         ))}
       </div>
     </article>
@@ -153,6 +160,16 @@ export default function OpinionsPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['opinions'] }),
   });
 
+  const likeMutation = useMutation({
+    mutationFn: (id) => api.opinions.like(accessToken, id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['opinions'] }),
+  });
+
+  function handleLike(id) {
+    if (!user) return setAuthMode('login');
+    likeMutation.mutate(id);
+  }
+
   return (
     <div className="min-h-screen bg-navy-900">
       {authMode && <AuthModal mode={authMode} onClose={() => setAuthMode(null)} />}
@@ -226,6 +243,7 @@ export default function OpinionsPage() {
               currentUser={user}
               accessToken={accessToken}
               onDelete={(id) => deleteMutation.mutate(id)}
+              onLike={handleLike}
             />
           ))}
         </div>

@@ -136,6 +136,13 @@ export default function AuthModal({ mode: initialMode = 'login', onClose }) {
             {mode === 'login' ? 'Sign up' : 'Sign in'}
           </button>
         </p>
+        {mode === 'login' && (
+          <p className="text-xs text-gray-600 text-center mt-2">
+            <a href="/reset-password" className="hover:text-gray-400 transition-colors" onClick={onClose}>
+              Forgot password?
+            </a>
+          </p>
+        )}
       </div>
     </div>
   );

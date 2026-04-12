@@ -168,6 +168,8 @@ _safeAlter('ALTER TABLE interests ADD COLUMN user_id INTEGER REFERENCES users(id
 _safeAlter('ALTER TABLE websites ADD COLUMN user_id INTEGER REFERENCES users(id) ON DELETE CASCADE');
 _safeAlter('ALTER TABLE users ADD COLUMN data_consent BOOLEAN NOT NULL DEFAULT 0');
 _safeAlter('ALTER TABLE users ADD COLUMN data_consent_at DATETIME');
+_safeAlter('ALTER TABLE users ADD COLUMN bio TEXT');
+_safeAlter('ALTER TABLE articles ADD COLUMN reaction_count INTEGER NOT NULL DEFAULT 0');
 
 startScheduler();
 

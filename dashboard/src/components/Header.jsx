@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Bell, Radar, LogIn, LogOut, User, Settings, PenLine, ShieldAlert, X, Bookmark, Sun, Moon, MessageSquare, Flame } from 'lucide-react';
+import { Search, Bell, Radar, LogIn, LogOut, User, Settings, PenLine, ShieldAlert, X, Bookmark, Sun, Moon, MessageSquare, Flame, Clock } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../services/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -185,6 +185,10 @@ export default function Header({ onSearch }) {
 
             <Link to="/bookmarks" className="btn-ghost p-2" title="Bookmarks">
               <Bookmark size={18} />
+            </Link>
+
+            <Link to="/history" className="btn-ghost p-2" title="Reading History">
+              <Clock size={18} />
             </Link>
 
             <button

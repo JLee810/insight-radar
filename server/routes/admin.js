@@ -59,6 +59,86 @@ router.delete('/comments/:id', (req, res) => {
   }
 });
 
+/**
+ * GET /api/admin/users
+ * List all users with pagination.
+ */
+router.get('/users', (req, res) => {
+  try {
+    const db = getDb();
+    const limit = Math.min(Number(req.query.limit) || 50, 100);
+    const offset = Number(req.query.offset) || 0;
+    const search = req.query.search || '';
+    const rows = db.prepare(`
+      SELECT id, email, username, role, is_banned, created_at,
+        (SELECT COUNT(*) FROM opinions WHERE user_id = users.id) AS opinion_count,
+        (SELECT COUNT(*) FROM comments WHERE user_id = users.id AND is_deleted = 0) AS comment_count
+      FROM users
+      WHERE username LIKE ? OR email LIKE ?
+      ORDER BY created_at DESC
+      LIMIT ? OFFSET ?
+    `).all(`%${search}%`, `%${search}%`, limit, offset);
+    const total = db.prepare("SELECT COUNT(*) AS c FROM users WHERE username LIKE ? OR email LIKE ?").get(`%${search}%`, `%${search}%`).c;
+    sendSuccess(res, { users: rows, total });
+  } catch (err) {
+    sendError(res, err.message);
+  }
+});
+
+/**
+ * POST /api/admin/users/:id/ban
+ * Ban or unban a user.
+ */
+router.post('/users/:id/ban', (req, res) => {
+  try {
+    const db = getDb();
+    const user = db.prepare('SELECT id, role FROM users WHERE id = ?').get(req.params.id);
+    if (!user) return sendError(res, 'User not found', 404);
+    if (user.role === 'admin') return sendError(res, 'Cannot ban an admin', 403);
+    const banned = req.body.banned ? 1 : 0;
+    db.prepare('UPDATE users SET is_banned = ? WHERE id = ?').run(banned, user.id);
+    // Revoke all refresh tokens if banning
+    if (banned) db.prepare('DELETE FROM refresh_tokens WHERE user_id = ?').run(user.id);
+    sendSuccess(res, { banned: !!banned });
+  } catch (err) {
+    sendError(res, err.message);
+  }
+});
+
+/**
+ * POST /api/admin/users/:id/promote
+ * Toggle admin role.
+ */
+router.post('/users/:id/promote', (req, res) => {
+  try {
+    const db = getDb();
+    const user = db.prepare('SELECT id, role FROM users WHERE id = ?').get(req.params.id);
+    if (!user) return sendError(res, 'User not found', 404);
+    const newRole = user.role === 'admin' ? 'user' : 'admin';
+    db.prepare('UPDATE users SET role = ? WHERE id = ?').run(newRole, user.id);
+    sendSuccess(res, { role: newRole });
+  } catch (err) {
+    sendError(res, err.message);
+  }
+});
+
+/**
+ * DELETE /api/admin/users/:id
+ * Hard delete a user and all their content.
+ */
+router.delete('/users/:id', (req, res) => {
+  try {
+    const db = getDb();
+    const user = db.prepare('SELECT id, role FROM users WHERE id = ?').get(req.params.id);
+    if (!user) return sendError(res, 'User not found', 404);
+    if (user.role === 'admin') return sendError(res, 'Cannot delete an admin account', 403);
+    db.prepare('DELETE FROM users WHERE id = ?').run(user.id);
+    sendSuccess(res, { deleted: true });
+  } catch (err) {
+    sendError(res, err.message);
+  }
+});
+
 router.get('/stats', (req, res) => {
   try {
     const db = getDb();

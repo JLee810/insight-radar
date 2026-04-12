@@ -242,6 +242,39 @@ function BiasPanel({ articleId }) {
   );
 }
 
+/** Related articles widget */
+function RelatedArticles({ tags, currentArticleId }) {
+  const { data } = useQuery({
+    queryKey: ['articles', 'related', tags],
+    queryFn: () => api.articles.list({ search: tags[0] || '', limit: 5 }),
+    enabled: tags.length > 0,
+    staleTime: 60_000,
+  });
+
+  const related = (data?.articles || []).filter(a => String(a.id) !== String(currentArticleId)).slice(0, 4);
+  if (!related.length) return null;
+
+  return (
+    <div className="card space-y-3">
+      <h2 className="text-sm font-semibold text-white">Related Articles</h2>
+      <div className="space-y-2">
+        {related.map(a => (
+          <Link
+            key={a.id}
+            to={`/debate/${a.id}`}
+            className="flex items-start gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors group"
+          >
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-gray-300 group-hover:text-cyan-400 transition-colors line-clamp-2 leading-snug">{a.title}</p>
+              {a.website_name && <p className="text-xs text-gray-600 mt-0.5">{a.website_name}</p>}
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function DebatePage() {
   const { articleId } = useParams();
   const navigate = useNavigate();
@@ -505,6 +538,9 @@ export default function DebatePage() {
 
         {/* ── Section 6: Bias panel ── */}
         <BiasPanel articleId={articleId} />
+
+        {/* ── Section 7: Related articles ── */}
+        <RelatedArticles tags={tags} currentArticleId={articleId} />
 
       </div>
     </div>

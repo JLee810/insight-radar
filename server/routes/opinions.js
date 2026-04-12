@@ -24,7 +24,8 @@ router.get('/', optionalAuth, (req, res) => {
       SELECT
         o.id, o.title, o.tags, o.status, o.created_at, o.updated_at,
         SUBSTR(o.body, 1, 300) AS excerpt,
-        u.id AS author_id, u.username AS author
+        u.id AS author_id, u.username AS author,
+        (SELECT COUNT(*) FROM opinion_likes WHERE opinion_id = o.id) AS like_count
       FROM opinions o
       JOIN users u ON o.user_id = u.id
       WHERE o.status = 'published'
@@ -55,13 +56,17 @@ router.get('/:id', optionalAuth, (req, res) => {
   try {
     const db = getDb();
     const row = db.prepare(`
-      SELECT o.*, u.username AS author, u.id AS author_id
+      SELECT o.*, u.username AS author, u.id AS author_id, u.bio AS author_bio,
+        (SELECT COUNT(*) FROM opinion_likes WHERE opinion_id = o.id) AS like_count
       FROM opinions o
       JOIN users u ON o.user_id = u.id
       WHERE o.id = ? AND o.status = 'published'
     `).get(req.params.id);
     if (!row) return sendError(res, 'Opinion not found', 404);
-    sendSuccess(res, { ...row, tags: tryParse(row.tags, []) });
+    const hasLiked = req.user
+      ? !!db.prepare('SELECT id FROM opinion_likes WHERE user_id = ? AND opinion_id = ?').get(req.user.id, row.id)
+      : false;
+    sendSuccess(res, { ...row, tags: tryParse(row.tags, []), hasLiked });
   } catch (err) {
     sendError(res, err.message);
   }
@@ -133,6 +138,30 @@ router.delete('/:id', requireAuth, (req, res) => {
     }
     db.prepare('DELETE FROM opinions WHERE id = ?').run(opinion.id);
     sendSuccess(res, { deleted: true });
+  } catch (err) {
+    sendError(res, err.message);
+  }
+});
+
+/**
+ * POST /api/opinions/:id/like
+ * Toggle like on an opinion.
+ */
+router.post('/:id/like', requireAuth, (req, res) => {
+  try {
+    const db = getDb();
+    const opinionId = Number(req.params.id);
+    const opinion = db.prepare("SELECT id FROM opinions WHERE id = ? AND status = 'published'").get(opinionId);
+    if (!opinion) return sendError(res, 'Opinion not found', 404);
+
+    const existing = db.prepare('SELECT id FROM opinion_likes WHERE user_id = ? AND opinion_id = ?').get(req.user.id, opinionId);
+    if (existing) {
+      db.prepare('DELETE FROM opinion_likes WHERE user_id = ? AND opinion_id = ?').run(req.user.id, opinionId);
+    } else {
+      db.prepare('INSERT INTO opinion_likes (user_id, opinion_id) VALUES (?, ?)').run(req.user.id, opinionId);
+    }
+    const likeCount = db.prepare('SELECT COUNT(*) AS c FROM opinion_likes WHERE opinion_id = ?').get(opinionId).c;
+    sendSuccess(res, { liked: !existing, likeCount });
   } catch (err) {
     sendError(res, err.message);
   }

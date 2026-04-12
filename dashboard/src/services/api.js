@@ -54,6 +54,10 @@ export const api = {
     me: (token) => authRequest(token, '/auth/me'),
     changePassword: (token, currentPassword, newPassword) =>
       authRequest(token, '/auth/change-password', { method: 'POST', body: { currentPassword, newPassword } }),
+    updateProfile: (token, bio) =>
+      authRequest(token, '/auth/profile', { method: 'PATCH', body: { bio } }),
+    requestReset: (email) => request('/auth/request-reset', { method: 'POST', body: { email } }),
+    resetPassword: (token, newPassword) => request('/auth/reset-password', { method: 'POST', body: { token, newPassword } }),
   },
   notifications: {
     list: (token) => authRequest(token, '/notifications'),
@@ -69,6 +73,10 @@ export const api = {
     reportedComments: (token) => authRequest(token, '/admin/reported-comments'),
     dismissComment:   (token, id) => authRequest(token, `/admin/comments/${id}/dismiss`, { method: 'POST' }),
     deleteComment:    (token, id) => authRequest(token, `/admin/comments/${id}`, { method: 'DELETE' }),
+    users:            (token, params = {}) => authRequest(token, `/admin/users?${new URLSearchParams(params)}`),
+    banUser:          (token, id, banned) => authRequest(token, `/admin/users/${id}/ban`, { method: 'POST', body: { banned } }),
+    promoteUser:      (token, id) => authRequest(token, `/admin/users/${id}/promote`, { method: 'POST' }),
+    deleteUser:       (token, id) => authRequest(token, `/admin/users/${id}`, { method: 'DELETE' }),
   },
   opinions: {
     list:   (params = {}) => request(`/opinions?${new URLSearchParams(params)}`),
@@ -76,6 +84,7 @@ export const api = {
     create: (token, body) => authRequest(token, '/opinions', { method: 'POST', body }),
     update: (token, id, body) => authRequest(token, `/opinions/${id}`, { method: 'PATCH', body }),
     delete: (token, id) => authRequest(token, `/opinions/${id}`, { method: 'DELETE' }),
+    like:   (token, id) => authRequest(token, `/opinions/${id}/like`, { method: 'POST' }),
   },
   debate: {
     vote: (token, articleId) => authRequest(token, `/debate/${articleId}/vote`, { method: 'POST' }),

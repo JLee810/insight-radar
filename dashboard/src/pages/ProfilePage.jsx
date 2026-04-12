@@ -46,6 +46,9 @@ export default function ProfilePage() {
                 <span className="text-xs bg-cyan-400/10 text-cyan-400 px-2 py-0.5 rounded-full">You</span>
               )}
             </div>
+            {currentUser?.bio && isOwnProfile && (
+              <p className="text-sm text-gray-400 mt-1 leading-relaxed">{currentUser.bio}</p>
+            )}
             <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
               <span className="flex items-center gap-1">
                 <PenLine size={11} /> {opinions?.length ?? '—'} opinions

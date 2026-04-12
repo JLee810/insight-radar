@@ -3,10 +3,11 @@
  */
 import { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, User, Shield, Bell, Info, Copy, Check, KeyRound, LogOut } from 'lucide-react';
+import { ArrowLeft, User, Shield, Bell, Info, Copy, Check, KeyRound, LogOut, PenLine } from 'lucide-react';
 import Header from '../components/Header.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { api } from '../services/api.js';
+import { useMutation } from '@tanstack/react-query';
 
 function Section({ icon: Icon, title, children }) {
   return (
@@ -46,6 +47,48 @@ function InfoRow({ label, value, copyable }) {
         </button>
       )}
     </div>
+  );
+}
+
+/** Bio edit form */
+function BioForm({ accessToken, initialBio }) {
+  const [bio, setBio] = useState(initialBio);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState('');
+
+  const mutation = useMutation({
+    mutationFn: () => api.auth.updateProfile(accessToken, bio.trim() || null),
+    onSuccess: () => { setSaved(true); setTimeout(() => setSaved(false), 2500); },
+    onError: (err) => setError(err.message),
+  });
+
+  return (
+    <Section icon={PenLine} title="Bio">
+      <div className="space-y-2">
+        <textarea
+          className="input w-full resize-none text-sm"
+          rows={3}
+          placeholder="Tell the community a bit about yourself… (max 300 characters)"
+          value={bio}
+          onChange={e => { setBio(e.target.value); setError(''); }}
+          maxLength={300}
+        />
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-gray-600">{bio.length}/300</span>
+          <div className="flex items-center gap-2">
+            {error && <span className="text-xs text-red-400">{error}</span>}
+            {saved && <span className="text-xs text-green-400">✓ Saved</span>}
+            <button
+              className="btn-primary text-sm"
+              onClick={() => mutation.mutate()}
+              disabled={mutation.isPending}
+            >
+              {mutation.isPending ? 'Saving…' : 'Save Bio'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Section>
   );
 }
 
@@ -185,10 +228,17 @@ export default function SettingsPage() {
           )}
         </Section>
 
+        {/* Bio */}
+        {user && <BioForm accessToken={accessToken} initialBio={user.bio || ''} />}
+
         {/* Change Password */}
         {user && (
           <Section icon={KeyRound} title="Change Password">
             <ChangePasswordForm accessToken={accessToken} />
+            <p className="text-xs text-gray-600 pt-1">
+              Forgot your password?{' '}
+              <Link to="/reset-password" className="text-cyan-400 hover:underline">Reset it here</Link>
+            </p>
           </Section>
         )}
 

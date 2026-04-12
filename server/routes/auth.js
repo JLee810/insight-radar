@@ -119,7 +119,7 @@ router.post('/refresh', (req, res) => {
     ).get(hashToken(refreshToken));
     if (!stored) return sendError(res, 'Token revoked or expired', 401);
 
-    const user = db.prepare('SELECT id, email, username, role FROM users WHERE id = ?').get(payload.sub);
+    const user = db.prepare('SELECT id, email, username, role, bio, created_at FROM users WHERE id = ?').get(payload.sub);
     if (!user) return sendError(res, 'User not found', 401);
 
     // Rotate: delete old, issue new
@@ -196,6 +196,86 @@ router.post('/change-password', requireAuth, [
     db.prepare('DELETE FROM refresh_tokens WHERE user_id = ?').run(user.id);
 
     sendSuccess(res, { changed: true });
+  } catch (err) {
+    sendError(res, err.message);
+  }
+});
+
+/**
+ * PATCH /api/auth/profile
+ * Update bio for the authenticated user.
+ */
+router.patch('/profile', requireAuth, [
+  body('bio').optional({ nullable: true }).isLength({ max: 300 }).withMessage('Bio max 300 characters'),
+], (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return sendError(res, errors.array()[0].msg, 400);
+  try {
+    const db = getDb();
+    db.prepare('UPDATE users SET bio = ? WHERE id = ?').run(req.body.bio ?? null, req.user.id);
+    const updated = db.prepare('SELECT id, email, username, role, bio, created_at FROM users WHERE id = ?').get(req.user.id);
+    sendSuccess(res, updated);
+  } catch (err) {
+    sendError(res, err.message);
+  }
+});
+
+/**
+ * POST /api/auth/request-reset
+ * Generate a password reset token (no email — returns token for copy/paste in dev).
+ * In production this would email the token. Body: { email }
+ */
+router.post('/request-reset', [
+  body('email').isEmail().normalizeEmail(),
+], (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return sendError(res, errors.array()[0].msg, 400);
+  try {
+    const db = getDb();
+    const user = db.prepare('SELECT id FROM users WHERE email = ?').get(req.body.email);
+    // Always return success to avoid email enumeration
+    if (!user) return sendSuccess(res, { sent: true });
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const hash = crypto.createHash('sha256').update(token).digest('hex');
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hour
+
+    // Invalidate old tokens for this user
+    db.prepare('DELETE FROM password_reset_tokens WHERE user_id = ?').run(user.id);
+    db.prepare('INSERT INTO password_reset_tokens (user_id, token_hash, expires_at) VALUES (?, ?, ?)').run(user.id, hash, expiresAt);
+
+    // In production: send email. For now, return token in response (dev only).
+    const isDev = process.env.NODE_ENV !== 'production';
+    sendSuccess(res, { sent: true, ...(isDev ? { token } : {}) });
+  } catch (err) {
+    sendError(res, err.message);
+  }
+});
+
+/**
+ * POST /api/auth/reset-password
+ * Reset password using a valid token. Body: { token, newPassword }
+ */
+router.post('/reset-password', [
+  body('token').notEmpty(),
+  body('newPassword').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
+], (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return sendError(res, errors.array()[0].msg, 400);
+  try {
+    const db = getDb();
+    const hash = crypto.createHash('sha256').update(req.body.token).digest('hex');
+    const record = db.prepare('SELECT * FROM password_reset_tokens WHERE token_hash = ? AND used = 0').get(hash);
+
+    if (!record) return sendError(res, 'Invalid or expired reset token', 400);
+    if (new Date(record.expires_at) < new Date()) return sendError(res, 'Reset token has expired', 400);
+
+    const newHash = bcrypt.hashSync(req.body.newPassword, 12);
+    db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(newHash, record.user_id);
+    db.prepare('UPDATE password_reset_tokens SET used = 1 WHERE id = ?').run(record.id);
+    db.prepare('DELETE FROM refresh_tokens WHERE user_id = ?').run(record.user_id);
+
+    sendSuccess(res, { reset: true });
   } catch (err) {
     sendError(res, err.message);
   }
