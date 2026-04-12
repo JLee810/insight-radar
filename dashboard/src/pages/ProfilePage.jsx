@@ -14,13 +14,11 @@ export default function ProfilePage() {
   const { user: currentUser } = useAuth();
   const isOwnProfile = currentUser?.username === username;
 
-  const { data: opinions, isLoading: loadingOpinions } = useQuery({
+  const { data: opinionsData, isLoading: loadingOpinions } = useQuery({
     queryKey: ['opinions', 'by', username],
-    queryFn: async () => {
-      const result = await api.opinions.list({ limit: 50 });
-      return result.opinions.filter(o => o.author === username);
-    },
+    queryFn: () => api.opinions.list({ username, limit: 100 }),
   });
+  const opinions = opinionsData?.opinions;
 
   return (
     <div className="min-h-screen bg-navy-900">

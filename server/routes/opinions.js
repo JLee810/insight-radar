@@ -17,7 +17,9 @@ const router = Router();
 router.get('/', optionalAuth, (req, res) => {
   try {
     const db = getDb();
-    const { limit = 50, offset = 0 } = req.query;
+    const limit = Math.min(Number(req.query.limit) || 50, 100);
+    const offset = Number(req.query.offset) || 0;
+    const { username } = req.query;
     const rows = db.prepare(`
       SELECT
         o.id, o.title, o.tags, o.status, o.created_at, o.updated_at,
@@ -26,11 +28,14 @@ router.get('/', optionalAuth, (req, res) => {
       FROM opinions o
       JOIN users u ON o.user_id = u.id
       WHERE o.status = 'published'
+        ${username ? "AND LOWER(u.username) = LOWER(?)" : ""}
       ORDER BY o.created_at DESC
       LIMIT ? OFFSET ?
-    `).all(Number(limit), Number(offset));
+    `).all(...(username ? [username] : []), limit, offset);
 
-    const total = db.prepare("SELECT COUNT(*) AS c FROM opinions WHERE status = 'published'").get().c;
+    const total = username
+      ? db.prepare("SELECT COUNT(*) AS c FROM opinions o JOIN users u ON o.user_id = u.id WHERE o.status = 'published' AND LOWER(u.username) = LOWER(?)").get(username).c
+      : db.prepare("SELECT COUNT(*) AS c FROM opinions WHERE status = 'published'").get().c;
 
     const formatted = rows.map(r => ({
       ...r,

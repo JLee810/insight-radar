@@ -9,13 +9,15 @@ import { ArrowLeft, Search, SlidersHorizontal, X } from 'lucide-react';
 import Header from '../components/Header.jsx';
 import ArticleCard from '../components/ArticleCard.jsx';
 import { api } from '../services/api.js';
+import { useAuth } from '../context/AuthContext.jsx';
 
-/** Fetch the distinct website list for the filter dropdown */
-function useWebsites() {
+/** Fetch the user's tracked websites for the filter dropdown */
+function useWebsites(token) {
   return useQuery({
-    queryKey: ['websites'],
-    queryFn: api.websites.list,
+    queryKey: ['websites', token],
+    queryFn: () => api.websites.list(token),
     staleTime: 60_000,
+    enabled: !!token,
   });
 }
 
@@ -30,6 +32,7 @@ function useSearchResults(params) {
 }
 
 export default function SearchPage() {
+  const { accessToken } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState(searchParams.get('q') || '');
   const [inputVal, setInputVal] = useState(searchParams.get('q') || '');
@@ -39,8 +42,8 @@ export default function SearchPage() {
   const [tag, setTag] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
-  const { data: websitesData } = useWebsites();
-  const websites = websitesData?.websites || websitesData || [];
+  const { data: websitesData } = useWebsites(accessToken);
+  const websites = Array.isArray(websitesData) ? websitesData : (websitesData?.websites || []);
 
   const filterParams = {
     search: query || undefined,
