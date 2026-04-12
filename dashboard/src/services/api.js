@@ -51,6 +51,8 @@ export const api = {
     logout: (refreshToken) => request('/auth/logout', { method: 'POST', body: { refreshToken } }),
     refresh: (refreshToken) => request('/auth/refresh', { method: 'POST', body: { refreshToken } }),
     me: (token) => authRequest(token, '/auth/me'),
+    changePassword: (token, currentPassword, newPassword) =>
+      authRequest(token, '/auth/change-password', { method: 'POST', body: { currentPassword, newPassword } }),
   },
   bias: {
     get: (articleId) => request(`/bias/${articleId}`),

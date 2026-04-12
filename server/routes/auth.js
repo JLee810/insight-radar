@@ -166,6 +166,37 @@ router.get('/me', requireAuth, (req, res) => {
 });
 
 /**
+ * POST /api/auth/change-password
+ * Body: { currentPassword, newPassword }
+ */
+router.post('/change-password', requireAuth, [
+  body('currentPassword').notEmpty().withMessage('Current password is required'),
+  body('newPassword').isLength({ min: 8 }).withMessage('New password must be at least 8 characters'),
+], (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return sendError(res, errors.array()[0].msg, 400);
+
+  try {
+    const db = getDb();
+    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
+    if (!user) return sendError(res, 'User not found', 404);
+
+    const valid = bcrypt.compareSync(req.body.currentPassword, user.password_hash);
+    if (!valid) return sendError(res, 'Current password is incorrect', 401);
+
+    const newHash = bcrypt.hashSync(req.body.newPassword, 12);
+    db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(newHash, user.id);
+
+    // Revoke all refresh tokens so other sessions are logged out
+    db.prepare('DELETE FROM refresh_tokens WHERE user_id = ?').run(user.id);
+
+    sendSuccess(res, { changed: true });
+  } catch (err) {
+    sendError(res, err.message);
+  }
+});
+
+/**
  * POST /api/auth/make-admin
  * Promotes a user to admin using the ADMIN_SECRET env var.
  * Body: { email, secret }
