@@ -81,6 +81,7 @@ function ChangePasswordForm({ accessToken }) {
         className="input w-full"
         type="password"
         placeholder="Current password"
+        autoComplete="current-password"
         value={current}
         onChange={e => setCurrent(e.target.value)}
         required
@@ -89,6 +90,7 @@ function ChangePasswordForm({ accessToken }) {
         className="input w-full"
         type="password"
         placeholder="New password (min 8 characters)"
+        autoComplete="new-password"
         value={next}
         onChange={e => setNext(e.target.value)}
         required
@@ -98,6 +100,7 @@ function ChangePasswordForm({ accessToken }) {
         className="input w-full"
         type="password"
         placeholder="Confirm new password"
+        autoComplete="new-password"
         value={confirm}
         onChange={e => setConfirm(e.target.value)}
         required
