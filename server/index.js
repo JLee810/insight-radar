@@ -167,6 +167,34 @@ try {
 
 startScheduler();
 
+// Auto-seed admin account on every startup so Railway redeploys don't lock out the owner
+// Requires ADMIN_EMAIL + ADMIN_PASSWORD env vars
+import bcrypt from 'bcryptjs';
+(function seedAdmin() {
+  const email    = process.env.ADMIN_EMAIL;
+  const password = process.env.ADMIN_PASSWORD;
+  const username = process.env.ADMIN_USERNAME || 'admin';
+  if (!email || !password) return;
+
+  try {
+    const _db = getDb();
+    const existing = _db.prepare('SELECT id FROM users WHERE email = ?').get(email.toLowerCase());
+    if (existing) {
+      // Already exists — ensure they have admin role
+      _db.prepare("UPDATE users SET role = 'admin' WHERE id = ?").run(existing.id);
+      console.log(`[seed] Admin account confirmed: ${email}`);
+    } else {
+      const hash = bcrypt.hashSync(password, 12);
+      _db.prepare(
+        'INSERT INTO users (email, username, password_hash, role) VALUES (?, ?, ?, ?)'
+      ).run(email.toLowerCase(), username, hash, 'admin');
+      console.log(`[seed] Admin account created: ${email}`);
+    }
+  } catch (err) {
+    console.error('[seed] Failed to seed admin:', err.message);
+  }
+})();
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`InsightRadar server running on port ${PORT}`);
 });
