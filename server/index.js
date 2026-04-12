@@ -26,6 +26,9 @@ import { scrapeArticle } from './services/scraper.js';
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Required for Railway/Render/Heroku — they sit behind a reverse proxy
+app.set('trust proxy', 1);
+
 app.use(helmetMiddleware);
 app.use(corsMiddleware);
 app.use(generalLimit);
