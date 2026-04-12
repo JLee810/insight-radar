@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, X } from 'lucide-react';
 import { api } from '../services/api.js';
+import { useAuth } from '../context/AuthContext.jsx';
 
 const CATEGORY_COLORS = {
   technology: 'border-blue-500/40 text-blue-300',
@@ -12,18 +13,24 @@ const CATEGORY_COLORS = {
 };
 
 /**
- * Add/remove interest keywords with optional category grouping.
+ * Add/remove interest keywords for the authenticated user.
  */
 export default function InterestTags() {
   const qc = useQueryClient();
-  const { data: interests = [], isLoading } = useQuery({ queryKey: ['interests'], queryFn: api.interests.list });
+  const { accessToken } = useAuth();
+
+  const { data: interests = [], isLoading } = useQuery({
+    queryKey: ['interests', accessToken],
+    queryFn: () => api.interests.list(accessToken),
+    enabled: !!accessToken,
+  });
 
   const addMutation = useMutation({
-    mutationFn: api.interests.create,
+    mutationFn: (body) => api.interests.create(accessToken, body),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['interests'] }),
   });
   const deleteMutation = useMutation({
-    mutationFn: api.interests.delete,
+    mutationFn: (id) => api.interests.delete(accessToken, id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['interests'] }),
   });
 
@@ -72,7 +79,7 @@ export default function InterestTags() {
       {isLoading ? (
         <div className="card h-16 animate-pulse bg-white/5" />
       ) : interests.length === 0 ? (
-        <p className="text-gray-500 text-sm text-center py-4">No interests added yet.</p>
+        <p className="text-gray-500 text-sm text-center py-4">No interests added yet. Add keywords to personalize your feed.</p>
       ) : (
         <div className="space-y-3">
           {Object.entries(grouped).map(([cat, items]) => (

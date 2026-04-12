@@ -12,9 +12,11 @@ import DebatePage from './pages/DebatePage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
 import AdminPage from './pages/AdminPage.jsx';
 import OpinionsPage from './pages/OpinionsPage.jsx';
+import OpinionDetailPage from './pages/OpinionDetailPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
 import SearchPage from './pages/SearchPage.jsx';
 import BookmarksPage from './pages/BookmarksPage.jsx';
+import TagPage from './pages/TagPage.jsx';
 import TrendingWidget from './components/TrendingWidget.jsx';
 import { useArticles, useCreateArticle } from './hooks/useArticles.js';
 import { LayoutGrid, Globe, Tag, Sparkles, Plus, X } from 'lucide-react';
@@ -39,9 +41,10 @@ function NavTab({ icon: Icon, label, active, onClick }) {
 /** Article feed panel with filters */
 function ArticleFeed({ searchQuery }) {
   const [filters, setFilters] = useState({ sort: 'discovered_at', order: 'DESC', limit: 20 });
+  const [page, setPage] = useState(0);
   const [addUrl, setAddUrl] = useState('');
   const [showAdd, setShowAdd] = useState(false);
-  const { data, isLoading, isError, refetch } = useArticles({ ...filters, search: searchQuery });
+  const { data, isLoading, isError, refetch } = useArticles({ ...filters, search: searchQuery, offset: page * filters.limit });
   const createArticle = useCreateArticle();
 
   async function handleAddUrl(e) {
@@ -63,6 +66,7 @@ function ArticleFeed({ searchQuery }) {
             onChange={e => {
               const [sort, order] = e.target.value.split(':');
               setFilters(p => ({ ...p, sort, order }));
+              setPage(0);
             }}
           >
             <option value="discovered_at:DESC">Newest first</option>
@@ -104,7 +108,7 @@ function ArticleFeed({ searchQuery }) {
         ].map(({ label, filter }) => (
           <button
             key={label}
-            onClick={() => setFilters(p => ({ sort: p.sort, order: p.order, limit: p.limit, ...filter }))}
+            onClick={() => { setFilters(p => ({ sort: p.sort, order: p.order, limit: p.limit, ...filter })); setPage(0); }}
             className="tag hover:border-cyan-400/40 hover:text-cyan-300 transition-colors cursor-pointer"
           >
             {label}
@@ -134,6 +138,29 @@ function ArticleFeed({ searchQuery }) {
           <ArticleCard key={article.id} article={article} />
         ))}
       </div>
+
+      {/* Pagination */}
+      {!isLoading && data && (
+        <div className="flex items-center justify-between pt-2">
+          <button
+            className="btn-ghost text-sm"
+            onClick={() => setPage(p => Math.max(0, p - 1))}
+            disabled={page === 0}
+          >
+            ← Previous
+          </button>
+          <span className="text-xs text-gray-500">
+            Page {page + 1} · {data.total ?? data.articles?.length} articles total
+          </span>
+          <button
+            className="btn-ghost text-sm"
+            onClick={() => setPage(p => p + 1)}
+            disabled={!data.articles?.length || data.articles.length < filters.limit}
+          >
+            Next →
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -192,9 +219,11 @@ export default function App() {
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/opinions" element={<OpinionsPage />} />
+            <Route path="/opinions/:id" element={<OpinionDetailPage />} />
             <Route path="/profile/:username" element={<ProfilePage />} />
             <Route path="/search" element={<SearchPage />} />
             <Route path="/bookmarks" element={<BookmarksPage />} />
+            <Route path="/tag/:tag" element={<TagPage />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>

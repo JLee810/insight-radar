@@ -2,24 +2,31 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Trash2, ToggleLeft, ToggleRight, Clock, Pencil, Check, X } from 'lucide-react';
 import { api } from '../services/api.js';
+import { useAuth } from '../context/AuthContext.jsx';
 
 /**
  * Manage tracked websites: add, edit, toggle active, delete, set interval.
  */
 export default function WebsiteList() {
   const qc = useQueryClient();
-  const { data: websites = [], isLoading } = useQuery({ queryKey: ['websites'], queryFn: api.websites.list });
+  const { accessToken } = useAuth();
+
+  const { data: websites = [], isLoading } = useQuery({
+    queryKey: ['websites', accessToken],
+    queryFn: () => api.websites.list(accessToken),
+    enabled: !!accessToken,
+  });
 
   const addMutation = useMutation({
-    mutationFn: api.websites.create,
+    mutationFn: (body) => api.websites.create(accessToken, body),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['websites'] }),
   });
   const updateMutation = useMutation({
-    mutationFn: ({ id, ...body }) => api.websites.update(id, body),
+    mutationFn: ({ id, ...body }) => api.websites.update(accessToken, id, body),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['websites'] }); setEditingId(null); },
   });
   const deleteMutation = useMutation({
-    mutationFn: api.websites.delete,
+    mutationFn: (id) => api.websites.delete(accessToken, id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['websites'] }),
   });
 

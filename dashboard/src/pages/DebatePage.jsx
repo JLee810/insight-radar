@@ -7,7 +7,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft, ExternalLink, ThumbsUp, MessageSquare,
-  AlertTriangle, Trash2, Flag, ChevronDown, ChevronUp, Send
+  AlertTriangle, Trash2, Flag, ChevronDown, ChevronUp, Send, Heart
 } from 'lucide-react';
 import { api } from '../services/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -22,7 +22,7 @@ const TYPE_CONFIG = {
 };
 
 /** Single comment card with reply support */
-function CommentCard({ comment, onReply, onDelete, onReport, currentUser }) {
+function CommentCard({ comment, onReply, onDelete, onReport, onLike, currentUser }) {
   const [showReplies, setShowReplies] = useState(true);
   const cfg = TYPE_CONFIG[comment.type] || TYPE_CONFIG.argument;
   const canDelete = currentUser && (currentUser.role === 'admin' || currentUser.id === comment.user_id);
@@ -44,6 +44,13 @@ function CommentCard({ comment, onReply, onDelete, onReport, currentUser }) {
           </div>
           <p className="text-sm text-gray-300 leading-relaxed">{comment.body}</p>
           <div className="flex items-center gap-3 mt-2">
+            <button
+              className={`flex items-center gap-1 text-xs transition-colors ${comment.hasLiked ? 'text-rose-400' : 'text-gray-500 hover:text-rose-400'}`}
+              onClick={() => onLike(comment.id)}
+            >
+              <Heart size={11} className={comment.hasLiked ? 'fill-rose-400' : ''} />
+              {comment.like_count > 0 && <span>{comment.like_count}</span>}
+            </button>
             <button
               className="text-xs text-gray-500 hover:text-cyan-400 transition-colors"
               onClick={() => onReply(comment)}
@@ -81,7 +88,7 @@ function CommentCard({ comment, onReply, onDelete, onReport, currentUser }) {
           {showReplies && (
             <div className="space-y-3 pl-3">
               {comment.replies.map(r => (
-                <CommentCard key={r.id} comment={r} onReply={onReply} onDelete={onDelete} onReport={onReport} currentUser={currentUser} />
+                <CommentCard key={r.id} comment={r} onReply={onReply} onDelete={onDelete} onReport={onReport} onLike={onLike} currentUser={currentUser} />
               ))}
             </div>
           )}
@@ -277,6 +284,11 @@ export default function DebatePage() {
     mutationFn: (id) => api.debate.reportComment(accessToken, id),
   });
 
+  const likeCommentMutation = useMutation({
+    mutationFn: (id) => api.debate.likeComment(accessToken, id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['debate', articleId] }),
+  });
+
   function handleVote() {
     if (!user) return setAuthMode('register');
     voteMutation.mutate();
@@ -300,6 +312,11 @@ export default function DebatePage() {
 
   function handleDelete(id) {
     if (confirm('Delete this comment?')) deleteCommentMutation.mutate(id);
+  }
+
+  function handleLike(id) {
+    if (!user) return setAuthMode('login');
+    likeCommentMutation.mutate(id);
   }
 
   if (isLoading) return (
@@ -419,6 +436,7 @@ export default function DebatePage() {
                     onReply={setReplyTo}
                     onDelete={handleDelete}
                     onReport={handleReport}
+                    onLike={handleLike}
                     currentUser={user}
                   />
                 ))}

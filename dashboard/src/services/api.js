@@ -32,27 +32,33 @@ export const api = {
     delete: (id) => request(`/articles/${id}`, { method: 'DELETE' }),
   },
   websites: {
-    list: () => request('/websites'),
-    create: (body) => request('/websites', { method: 'POST', body }),
-    update: (id, body) => request(`/websites/${id}`, { method: 'PATCH', body }),
-    delete: (id) => request(`/websites/${id}`, { method: 'DELETE' }),
+    list: (token) => authRequest(token, '/websites'),
+    create: (token, body) => authRequest(token, '/websites', { method: 'POST', body }),
+    update: (token, id, body) => authRequest(token, `/websites/${id}`, { method: 'PATCH', body }),
+    delete: (token, id) => authRequest(token, `/websites/${id}`, { method: 'DELETE' }),
   },
   interests: {
-    list: () => request('/interests'),
-    create: (body) => request('/interests', { method: 'POST', body }),
-    delete: (id) => request(`/interests/${id}`, { method: 'DELETE' }),
+    list: (token) => authRequest(token, '/interests'),
+    create: (token, body) => authRequest(token, '/interests', { method: 'POST', body }),
+    bulkCreate: (token, keywords) => authRequest(token, '/interests/bulk', { method: 'POST', body: { keywords } }),
+    delete: (token, id) => authRequest(token, `/interests/${id}`, { method: 'DELETE' }),
   },
   stats: () => request('/stats'),
   analyze: (body) => request('/analyze', { method: 'POST', body }),
   trackingLog: (params = {}) => request(`/tracking-log?${new URLSearchParams(params)}`),
   auth: {
-    register: (email, username, password) => request('/auth/register', { method: 'POST', body: { email, username, password } }),
+    register: (email, username, password, data_consent) => request('/auth/register', { method: 'POST', body: { email, username, password, data_consent: String(data_consent) } }),
     login: (email, password) => request('/auth/login', { method: 'POST', body: { email, password } }),
     logout: (refreshToken) => request('/auth/logout', { method: 'POST', body: { refreshToken } }),
     refresh: (refreshToken) => request('/auth/refresh', { method: 'POST', body: { refreshToken } }),
     me: (token) => authRequest(token, '/auth/me'),
     changePassword: (token, currentPassword, newPassword) =>
       authRequest(token, '/auth/change-password', { method: 'POST', body: { currentPassword, newPassword } }),
+  },
+  notifications: {
+    list: (token) => authRequest(token, '/notifications'),
+    markRead: (token, id) => authRequest(token, `/notifications/${id}/read`, { method: 'POST' }),
+    markAllRead: (token) => authRequest(token, '/notifications/read-all', { method: 'POST' }),
   },
   bias: {
     get: (articleId) => request(`/bias/${articleId}`),
@@ -79,5 +85,6 @@ export const api = {
     addComment: (token, articleId, body) => authRequest(token, `/debate/${articleId}/comments`, { method: 'POST', body }),
     deleteComment: (token, commentId) => authRequest(token, `/debate/comments/${commentId}`, { method: 'DELETE' }),
     reportComment: (token, commentId) => authRequest(token, `/debate/comments/${commentId}/report`, { method: 'POST' }),
+    likeComment: (token, commentId) => authRequest(token, `/debate/comments/${commentId}/like`, { method: 'POST' }),
   },
 };

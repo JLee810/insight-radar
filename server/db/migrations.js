@@ -115,6 +115,50 @@ const migrations = [
       DROP TABLE IF EXISTS _dummy_migration3;
     `,
   },
+  {
+    id: 5,
+    name: 'per_user_interests_websites',
+    sql: `
+      -- Add user_id to interests (existing rows keep NULL = global/admin defaults)
+      CREATE TABLE IF NOT EXISTS _dummy_migration5 (x INTEGER);
+      DROP TABLE IF EXISTS _dummy_migration5;
+    `,
+  },
+  {
+    id: 6,
+    name: 'comment_likes_notifications',
+    sql: `
+      -- Comment likes
+      CREATE TABLE IF NOT EXISTS comment_likes (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        comment_id INTEGER NOT NULL REFERENCES comments(id) ON DELETE CASCADE,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, comment_id)
+      );
+      CREATE INDEX IF NOT EXISTS idx_comment_likes_comment ON comment_likes(comment_id);
+
+      -- Notifications
+      CREATE TABLE IF NOT EXISTS notifications (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        type       TEXT    NOT NULL,  -- 'reply' | 'debate_open' | 'like'
+        data       TEXT    NOT NULL DEFAULT '{}',
+        is_read    BOOLEAN NOT NULL DEFAULT 0,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id);
+      CREATE INDEX IF NOT EXISTS idx_notifications_unread ON notifications(user_id, is_read);
+    `,
+  },
+  {
+    id: 7,
+    name: 'data_consent',
+    sql: `
+      CREATE TABLE IF NOT EXISTS _dummy_migration7 (x INTEGER);
+      DROP TABLE IF EXISTS _dummy_migration7;
+    `,
+  },
 ];
 
 /**

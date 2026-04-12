@@ -20,7 +20,7 @@ function OpinionCard({ opinion, currentUser, accessToken, onDelete }) {
   return (
     <article className="card space-y-3 hover:border-white/15 transition-colors">
       <div className="flex items-start justify-between gap-2">
-        <h2 className="font-semibold text-white leading-snug text-base">{opinion.title}</h2>
+        <Link to={`/opinions/${opinion.id}`} className="font-semibold text-white leading-snug text-base hover:text-cyan-400 transition-colors">{opinion.title}</Link>
         {canDelete && (
           <button
             className="shrink-0 p-1 text-gray-600 hover:text-red-400 transition-colors"

@@ -3,27 +3,32 @@
  * @param {{ mode: 'login'|'register', onClose: () => void }} props
  */
 import { useState } from 'react';
-import { X, Radar } from 'lucide-react';
+import { X, Radar, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 
 export default function AuthModal({ mode: initialMode = 'login', onClose }) {
-  const [mode, setMode]       = useState(initialMode);
-  const [email, setEmail]     = useState('');
+  const [mode, setMode]         = useState(initialMode);
+  const [email, setEmail]       = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError]     = useState('');
-  const [loading, setLoading] = useState(false);
-  const { login, register }   = useAuth();
+  const [consent, setConsent]   = useState(false);
+  const [error, setError]       = useState('');
+  const [loading, setLoading]   = useState(false);
+  const { login, register }     = useAuth();
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
+    if (mode === 'register' && !consent) {
+      setError('You must agree to data collection to create an account.');
+      return;
+    }
     setLoading(true);
     try {
       if (mode === 'login') {
         await login(email, password);
       } else {
-        await register(email, username, password);
+        await register(email, username, password, consent);
       }
       onClose();
     } catch (err) {
@@ -31,6 +36,12 @@ export default function AuthModal({ mode: initialMode = 'login', onClose }) {
     } finally {
       setLoading(false);
     }
+  }
+
+  function switchMode(next) {
+    setMode(next);
+    setError('');
+    setConsent(false);
   }
 
   return (
@@ -89,9 +100,29 @@ export default function AuthModal({ mode: initialMode = 'login', onClose }) {
             minLength={mode === 'register' ? 8 : 1}
           />
 
+          {/* Data collection consent — register only */}
+          {mode === 'register' && (
+            <label className="flex items-start gap-3 cursor-pointer group">
+              <input
+                type="checkbox"
+                className="mt-0.5 w-4 h-4 accent-cyan-400 shrink-0"
+                checked={consent}
+                onChange={e => setConsent(e.target.checked)}
+              />
+              <span className="text-xs text-gray-400 leading-relaxed group-hover:text-gray-300 transition-colors">
+                <ShieldCheck size={11} className="inline mr-1 text-cyan-400" />
+                I agree that InsightRadar may collect and store my interests, tracked websites, and reading activity to personalize my experience. This data is private to my account and is never shared with third parties.
+              </span>
+            </label>
+          )}
+
           {error && <p className="text-red-400 text-xs">{error}</p>}
 
-          <button type="submit" className="btn-primary w-full justify-center" disabled={loading}>
+          <button
+            type="submit"
+            className="btn-primary w-full justify-center"
+            disabled={loading || (mode === 'register' && !consent)}
+          >
             {loading ? 'Please wait…' : mode === 'login' ? 'Sign In' : 'Create Account'}
           </button>
         </form>
@@ -100,7 +131,7 @@ export default function AuthModal({ mode: initialMode = 'login', onClose }) {
           {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
           <button
             className="text-cyan-400 hover:underline"
-            onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); }}
+            onClick={() => switchMode(mode === 'login' ? 'register' : 'login')}
           >
             {mode === 'login' ? 'Sign up' : 'Sign in'}
           </button>

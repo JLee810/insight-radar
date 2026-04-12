@@ -31,6 +31,7 @@ router.post('/register', [
   body('email').isEmail().normalizeEmail(),
   body('username').trim().isLength({ min: 3, max: 30 }).matches(/^[a-zA-Z0-9_]+$/),
   body('password').isLength({ min: 8 }),
+  body('data_consent').equals('true').withMessage('You must agree to data collection to continue'),
 ], (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return sendError(res, errors.array()[0].msg, 400);
@@ -48,7 +49,7 @@ router.post('/register', [
     const role = adminEmails.includes(email.toLowerCase()) ? 'admin' : 'user';
 
     const result = db.prepare(
-      'INSERT INTO users (email, username, password_hash, role) VALUES (?, ?, ?, ?)'
+      'INSERT INTO users (email, username, password_hash, role, data_consent, data_consent_at) VALUES (?, ?, ?, ?, 1, CURRENT_TIMESTAMP)'
     ).run(email, username, password_hash, role);
 
     const user = db.prepare('SELECT id, email, username, role, created_at FROM users WHERE id = ?').get(result.lastInsertRowid);

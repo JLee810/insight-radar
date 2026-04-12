@@ -19,6 +19,7 @@ import biasRouter from './routes/bias.js';
 import trendingRouter from './routes/trending.js';
 import adminRouter from './routes/admin.js';
 import opinionsRouter from './routes/opinions.js';
+import notificationsRouter from './routes/notifications.js';
 import { analyzeArticle } from './services/ai-analyzer.js';
 import { startScheduler } from './services/scheduler.js';
 import { scrapeArticle } from './services/scraper.js';
@@ -46,6 +47,7 @@ app.use('/api/bias', biasRouter);
 app.use('/api/trending', trendingRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/opinions', opinionsRouter);
+app.use('/api/notifications', notificationsRouter);
 app.use('/api/articles', articlesRouter);
 app.use('/api/websites', websitesRouter);
 app.use('/api/interests', interestsRouter);
@@ -160,10 +162,12 @@ initDatabase();
 runMigrations();
 
 // Safe column additions (ALTER TABLE IF NOT EXISTS not supported in SQLite)
-try {
-  const _db = getDb();
-  _db.exec('ALTER TABLE articles ADD COLUMN bias_data TEXT');
-} catch { /* column already exists */ }
+const _safeAlter = (sql) => { try { getDb().exec(sql); } catch { /* column already exists */ } };
+_safeAlter('ALTER TABLE articles ADD COLUMN bias_data TEXT');
+_safeAlter('ALTER TABLE interests ADD COLUMN user_id INTEGER REFERENCES users(id) ON DELETE CASCADE');
+_safeAlter('ALTER TABLE websites ADD COLUMN user_id INTEGER REFERENCES users(id) ON DELETE CASCADE');
+_safeAlter('ALTER TABLE users ADD COLUMN data_consent BOOLEAN NOT NULL DEFAULT 0');
+_safeAlter('ALTER TABLE users ADD COLUMN data_consent_at DATETIME');
 
 startScheduler();
 
