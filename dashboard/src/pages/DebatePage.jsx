@@ -378,7 +378,7 @@ export default function DebatePage() {
 
       <Header />
       {/* Back nav */}
-      <div className="bg-navy-900/60 border-b border-white/5 px-6 py-2">
+      <div className="bg-navy-900/60 border-b border-white/5 px-4 py-2">
         <div className="max-w-3xl mx-auto flex items-center gap-3">
           <button className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors" onClick={() => navigate('/')}>
             <ArrowLeft size={16} /> Back to feed
@@ -445,11 +445,11 @@ export default function DebatePage() {
         {/* ── Section 4: Comments ── */}
         {thread.status === 'open' && (
           <div className="card space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-sm font-semibold text-white">
                 Debate ({comments.length} {comments.length === 1 ? 'contribution' : 'contributions'})
               </h2>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-1.5">
                 {Object.entries(TYPE_CONFIG).map(([type, cfg]) => (
                   <span key={type} className={`text-xs px-2 py-0.5 rounded-full ${cfg.bg} ${cfg.color}`}>{cfg.label}</span>
                 ))}

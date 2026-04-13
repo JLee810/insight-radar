@@ -90,7 +90,7 @@ export default function OpinionDetailPage() {
       <Header />
 
       {/* Sub-nav */}
-      <div className="border-b border-white/5 px-6 py-2.5">
+      <div className="border-b border-white/5 px-4 py-2.5">
         <div className="max-w-3xl mx-auto flex items-center gap-2 text-xs text-gray-500">
           <Link to="/opinions" className="flex items-center gap-1 hover:text-white transition-colors">
             <ArrowLeft size={13} /> Opinions

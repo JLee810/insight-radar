@@ -25,13 +25,13 @@ import ErrorBoundary from './components/ErrorBoundary.jsx';
 import { useAuth } from './context/AuthContext.jsx';
 import TrendingWidget from './components/TrendingWidget.jsx';
 import { useArticles, useCreateArticle } from './hooks/useArticles.js';
-import { LayoutGrid, Globe, Tag, Sparkles, Plus, X } from 'lucide-react';
+import { LayoutGrid, Globe, Tag, Sparkles, Plus, X, BarChart2 } from 'lucide-react';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
 });
 
-/** Sidebar navigation tab button */
+/** Sidebar navigation tab button (desktop) */
 function NavTab({ icon: Icon, label, active, onClick }) {
   return (
     <button
@@ -39,6 +39,19 @@ function NavTab({ icon: Icon, label, active, onClick }) {
       className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${active ? 'bg-cyan-400/10 text-cyan-400 font-medium' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
     >
       <Icon size={16} />
+      {label}
+    </button>
+  );
+}
+
+/** Bottom nav tab (mobile) */
+function BottomTab({ icon: Icon, label, active, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-medium transition-colors ${active ? 'text-cyan-400' : 'text-gray-500'}`}
+    >
+      <Icon size={20} strokeWidth={active ? 2.5 : 1.8} />
       {label}
     </button>
   );
@@ -63,7 +76,7 @@ function ArticleFeed({ searchQuery }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="font-semibold text-white">Articles</h2>
         <div className="flex items-center gap-2">
           <select
@@ -105,7 +118,7 @@ function ArticleFeed({ searchQuery }) {
       {createArticle.isError && <p className="text-red-400 text-xs">{createArticle.error.message}</p>}
 
       {/* Quick filter pills */}
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {[
           { label: 'All', filter: {} },
           { label: 'Unread', filter: { is_read: 'false' } },
@@ -240,7 +253,7 @@ function HomePage() {
     { id: 'foryou', icon: Sparkles, label: 'For You' },
     { id: 'websites', icon: Globe, label: 'Websites' },
     { id: 'interests', icon: Tag, label: 'Interests' },
-    { id: 'insights', icon: Sparkles, label: 'AI Insights' },
+    { id: 'insights', icon: BarChart2, label: 'Insights' },
   ];
 
   return (
@@ -248,8 +261,8 @@ function HomePage() {
       <Header onSearch={q => { setSearchQuery(q); setTab('articles'); }} />
 
       <div className="max-w-7xl mx-auto px-4 py-6 flex gap-6">
-        {/* Sidebar */}
-        <aside className="w-52 shrink-0 space-y-1 sticky top-20 h-fit">
+        {/* Sidebar — desktop only */}
+        <aside className="hidden md:block w-52 shrink-0 space-y-1 sticky top-20 h-fit">
           {tabs.map(t => (
             <NavTab key={t.id} icon={t.icon} label={t.label} active={tab === t.id} onClick={() => setTab(t.id)} />
           ))}
@@ -259,7 +272,7 @@ function HomePage() {
         </aside>
 
         {/* Main content */}
-        <main className="flex-1 min-w-0 space-y-6">
+        <main className="flex-1 min-w-0 space-y-6 pb-24 md:pb-6">
           {tab === 'articles' && (
             <>
               <Dashboard />
@@ -272,6 +285,13 @@ function HomePage() {
           {tab === 'insights' && <AIInsights />}
         </main>
       </div>
+
+      {/* Bottom nav — mobile only */}
+      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-navy-900/95 backdrop-blur border-t border-white/8 flex md:hidden safe-bottom">
+        {tabs.map(t => (
+          <BottomTab key={t.id} icon={t.icon} label={t.label} active={tab === t.id} onClick={() => setTab(t.id)} />
+        ))}
+      </nav>
     </div>
   );
 }

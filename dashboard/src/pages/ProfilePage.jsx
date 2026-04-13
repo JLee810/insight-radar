@@ -23,7 +23,7 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-navy-900">
       <Header />
-      <div className="bg-navy-900/60 border-b border-white/5 px-6 py-2">
+      <div className="bg-navy-900/60 border-b border-white/5 px-4 py-2">
         <div className="max-w-3xl mx-auto">
           <Link to="/" className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors w-fit">
             <ArrowLeft size={16} /> Back
@@ -33,33 +33,35 @@ export default function ProfilePage() {
 
       <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
         {/* Profile header */}
-        <div className="card flex items-center gap-5">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center shrink-0">
-            <span className="text-2xl font-bold text-navy-900">
-              {username?.[0]?.toUpperCase()}
-            </span>
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-xl font-bold text-white">{username}</h1>
-              {isOwnProfile && (
-                <span className="text-xs bg-cyan-400/10 text-cyan-400 px-2 py-0.5 rounded-full">You</span>
-              )}
-            </div>
-            {currentUser?.bio && isOwnProfile && (
-              <p className="text-sm text-gray-400 mt-1 leading-relaxed">{currentUser.bio}</p>
-            )}
-            <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
-              <span className="flex items-center gap-1">
-                <PenLine size={11} /> {opinions?.length ?? '—'} opinions
+        <div className="card">
+          <div className="flex items-start gap-4">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center shrink-0">
+              <span className="text-2xl font-bold text-navy-900">
+                {username?.[0]?.toUpperCase()}
               </span>
             </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-xl font-bold text-white">{username}</h1>
+                {isOwnProfile && (
+                  <span className="text-xs bg-cyan-400/10 text-cyan-400 px-2 py-0.5 rounded-full">You</span>
+                )}
+                {isOwnProfile && (
+                  <Link to="/settings" className="btn-ghost text-xs py-1 px-2 ml-auto">
+                    Edit Profile
+                  </Link>
+                )}
+              </div>
+              {currentUser?.bio && isOwnProfile && (
+                <p className="text-sm text-gray-400 mt-1 leading-relaxed">{currentUser.bio}</p>
+              )}
+              <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                <span className="flex items-center gap-1">
+                  <PenLine size={11} /> {opinions?.length ?? '—'} opinions
+                </span>
+              </div>
+            </div>
           </div>
-          {isOwnProfile && (
-            <Link to="/settings" className="btn-ghost text-sm flex items-center gap-1.5">
-              Edit Profile
-            </Link>
-          )}
         </div>
 
         {/* Opinions */}

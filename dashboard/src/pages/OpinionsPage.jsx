@@ -306,7 +306,7 @@ export default function OpinionsPage() {
       <Header />
 
       {/* Sub-nav */}
-      <div className="border-b border-white/5 px-6 py-2.5">
+      <div className="border-b border-white/5 px-4 py-2.5">
         <div className="max-w-3xl mx-auto flex items-center gap-3">
           <Link to="/" className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-white transition-colors">
             <ArrowLeft size={14} /> Back

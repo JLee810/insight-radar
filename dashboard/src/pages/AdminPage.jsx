@@ -201,7 +201,7 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-navy-900">
       <Header />
-      <div className="bg-navy-900/60 border-b border-white/5 px-6 py-2">
+      <div className="bg-navy-900/60 border-b border-white/5 px-4 py-2">
         <div className="max-w-5xl mx-auto flex items-center gap-3">
           <Link to="/" className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors">
             <ArrowLeft size={16} /> Back
@@ -215,7 +215,7 @@ export default function AdminPage() {
       <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
 
         {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
           <StatCard icon={Users}         label="Total Users"      value={stats?.totalUsers} />
           <StatCard icon={FileText}      label="Articles"         value={stats?.totalArticles} />
           <StatCard icon={MessageSquare} label="Comments"         value={stats?.totalComments} />

@@ -185,7 +185,7 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen bg-navy-900">
       <Header />
-      <div className="bg-navy-900/60 border-b border-white/5 px-6 py-2">
+      <div className="bg-navy-900/60 border-b border-white/5 px-4 py-2">
         <div className="max-w-2xl mx-auto flex items-center gap-3">
           <Link to="/" className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors">
             <ArrowLeft size={16} /> Back

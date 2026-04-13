@@ -5,6 +5,12 @@
 @layer base {
   html {
     @apply bg-navy-900 text-gray-100;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Prevent content going under iOS home bar */
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
   ::-webkit-scrollbar {
