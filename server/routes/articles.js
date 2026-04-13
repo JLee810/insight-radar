@@ -3,6 +3,7 @@ import { getDb } from '../db/database.js';
 import { sendSuccess, sendError, formatArticle } from '../utils/helpers.js';
 import { analyzeArticle } from '../services/ai-analyzer.js';
 import { scrapeArticle } from '../services/scraper.js';
+import { analyzeBias } from '../services/bias-analyzer.js';
 
 const router = Router();
 
@@ -127,7 +128,17 @@ router.post('/', async (req, res) => {
       published_at: scraped.publishedAt || null,
     });
 
-    const article = db.prepare('SELECT * FROM articles WHERE id = ?').get(result.lastInsertRowid);
+    const newId = result.lastInsertRowid;
+
+    // Run bias analysis in background — non-blocking
+    analyzeBias({ title: scraped.title, content: scraped.content || '' })
+      .then(biasResult => {
+        db.prepare('UPDATE articles SET bias_data = ? WHERE id = ?')
+          .run(JSON.stringify(biasResult), newId);
+      })
+      .catch(() => { /* bias is optional — ignore failures */ });
+
+    const article = db.prepare('SELECT * FROM articles WHERE id = ?').get(newId);
     sendSuccess(res, formatArticle(article), 201);
   } catch (err) {
     sendError(res, err.message);

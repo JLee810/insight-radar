@@ -29,6 +29,9 @@ export function initDatabase() {
   const schema = readFileSync(join(__dirname, 'schema.sql'), 'utf8');
   db.exec(schema);
 
+  // Safe migrations — add new columns without breaking existing tables
+  try { db.exec('ALTER TABLE articles ADD COLUMN bias_data TEXT'); } catch { /* already exists */ }
+
   console.log(`Database initialized at ${dbPath}`);
   return db;
 }

@@ -2,6 +2,7 @@ import cron from 'node-cron';
 import { getDb } from '../db/database.js';
 import { discoverArticleLinks, scrapeArticle } from './scraper.js';
 import { analyzeArticle } from './ai-analyzer.js';
+import { analyzeBias } from './bias-analyzer.js';
 
 // Map of website_id → cron task instance
 const tasks = new Map();
@@ -101,7 +102,7 @@ async function checkWebsite(websiteId) {
           aiResult = await analyzeArticle(scraped, interests);
         }
 
-        db.prepare(`
+        const insertResult = db.prepare(`
           INSERT INTO articles (website_id, url, title, content, summary, relevance_score, ai_tags, ai_insights, published_at)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `).run(
@@ -115,6 +116,15 @@ async function checkWebsite(websiteId) {
           aiResult.insight,
           scraped.publishedAt || null
         );
+
+        // Run bias analysis in background — non-blocking
+        const newArticleId = insertResult.lastInsertRowid;
+        analyzeBias({ title: scraped.title, content: scraped.content || '' })
+          .then(biasResult => {
+            db.prepare('UPDATE articles SET bias_data = ? WHERE id = ?')
+              .run(JSON.stringify(biasResult), newArticleId);
+          })
+          .catch(() => { /* bias is optional */ });
 
         articlesFound++;
         // Small delay to be respectful to sites and avoid rate limits

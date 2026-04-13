@@ -43,6 +43,7 @@ export function formatArticle(row) {
     ai_tags: safeJsonParse(row.ai_tags, []),
     is_read: Boolean(row.is_read),
     is_bookmarked: Boolean(row.is_bookmarked),
+    bias: safeJsonParse(row.bias_data, null),
   };
 }
 

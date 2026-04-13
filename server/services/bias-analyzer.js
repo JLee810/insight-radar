@@ -4,7 +4,12 @@
  */
 import Anthropic from '@anthropic-ai/sdk';
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+// Lazy-initialize so dotenv has already run before the client reads the env var
+let _client = null;
+function getClient() {
+  if (!_client) _client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  return _client;
+}
 
 /**
  * Analyzes an article for media/political bias.
@@ -35,7 +40,7 @@ Return ONLY valid JSON with these exact keys:
   "reasoning": two-sentence explanation of your bias assessment (max 250 chars)
 }`;
 
-  const message = await client.messages.create({
+  const message = await getClient().messages.create({
     model: 'claude-haiku-4-5-20251001',
     max_tokens: 400,
     messages: [{ role: 'user', content: prompt }],
