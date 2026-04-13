@@ -15,7 +15,7 @@ let db;
 export function initDatabase() {
   const dbPath = process.env.DB_PATH ||
     (process.env.NODE_ENV === 'production'
-      ? '/tmp/insight-radar.db'
+      ? '/data/insight-radar.db'
       : join(__dirname, 'insight-radar.db'));
 
   // Create directory if it doesn't exist (needed for mounted volumes)
