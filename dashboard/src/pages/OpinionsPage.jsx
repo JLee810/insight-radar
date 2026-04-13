@@ -221,7 +221,7 @@ function WriteForm({ accessToken, onSuccess, onCancel }) {
           <div>
             <textarea
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-gray-300 placeholder-gray-500 focus:outline-none focus:border-cyan-400/50 focus:bg-white/8 transition-all resize-none leading-relaxed"
-              rows={10}
+              rows={6}
               placeholder="Write your opinion here… Be clear, be bold, be constructive."
               value={body}
               onChange={e => { setBody(e.target.value); setError(''); }}
