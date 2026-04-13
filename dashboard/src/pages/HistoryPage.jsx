@@ -17,6 +17,7 @@ export default function HistoryPage() {
     queryKey: ['articles', 'history'],
     queryFn: () => api.articles.list({ is_read: 'true', sort: 'discovered_at', order: 'DESC', limit: 100 }),
     staleTime: 30_000,
+    enabled: !!user,
   });
 
   return (

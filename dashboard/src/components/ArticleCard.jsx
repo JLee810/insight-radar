@@ -79,7 +79,7 @@ export default function ArticleCard({ article }) {
             <h3 className="font-semibold text-sm text-white leading-snug line-clamp-2 group-hover:text-cyan-400 transition-colors">
               {article.title}
             </h3>
-            <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center gap-1 shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
               <button className="p-1 hover:text-cyan-400 transition-colors" onClick={toggleBookmark} title="Bookmark">
                 {article.is_bookmarked ? <BookmarkCheck size={15} className="text-cyan-400" /> : <Bookmark size={15} />}
               </button>

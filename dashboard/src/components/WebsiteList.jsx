@@ -19,15 +19,15 @@ export default function WebsiteList() {
 
   const addMutation = useMutation({
     mutationFn: (body) => api.websites.create(accessToken, body),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['websites'] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['websites', accessToken] }),
   });
   const updateMutation = useMutation({
     mutationFn: ({ id, ...body }) => api.websites.update(accessToken, id, body),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['websites'] }); setEditingId(null); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['websites', accessToken] }); setEditingId(null); },
   });
   const deleteMutation = useMutation({
     mutationFn: (id) => api.websites.delete(accessToken, id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['websites'] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['websites', accessToken] }),
   });
 
   const [form, setForm] = useState({ url: '', name: '', check_interval: 3600 });
