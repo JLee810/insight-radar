@@ -5,10 +5,11 @@ const BASE = import.meta.env.VITE_API_URL
   : '/api';
 
 async function request(path, options = {}) {
+  const { headers: extraHeaders, body: bodyData, ...restOptions } = options;
   const res = await fetch(`${BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...options.headers },
-    ...options,
-    body: options.body ? JSON.stringify(options.body) : undefined,
+    ...restOptions,
+    headers: { 'Content-Type': 'application/json', ...extraHeaders },
+    body: bodyData !== undefined ? JSON.stringify(bodyData) : undefined,
   });
   const json = await res.json();
   if (!json.success) throw new Error(json.error || 'Request failed');
