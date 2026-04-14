@@ -128,10 +128,15 @@ async function checkWebsite(websiteId) {
           };
         }
 
-        let aiResult = { summary: '', relevance_score: 0, tags: [], insight: '' };
+        let aiResult = { summary: '', relevance_score: 50, tags: [], insight: '' };
 
         if (interests.length > 0) {
-          aiResult = await analyzeArticle(scraped, interests);
+          try {
+            aiResult = await analyzeArticle(scraped, interests);
+          } catch (aiErr) {
+            // AI quota exhausted or unavailable — still save the article with neutral score
+            console.warn(`  AI analysis skipped for ${link}: ${aiErr.message?.slice(0, 80)}`);
+          }
         }
 
         const insertResult = db.prepare(`
