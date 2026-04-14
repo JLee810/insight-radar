@@ -49,13 +49,17 @@ export function AuthProvider({ children }) {
 
   /**
    * Try to get a fresh accessToken using the stored refreshToken.
-   * - 401/403 → genuine expiry → log out
-   * - Network/5xx error → keep existing user, don't log out
+   *
+   * Logout only happens when the JWT is cryptographically invalid/expired
+   * (the server could not verify the signature). Any other error — including
+   * network issues, server restarts, or a wiped DB — keeps the user logged in
+   * visually and retries silently later.
+   *
+   * Retry logic: on first failure wait 4 s and try once more before deciding.
    */
-  const silentRefresh = useCallback(async () => {
+  const silentRefresh = useCallback(async (isRetry = false) => {
     const rt = localStorage.getItem('refreshToken');
     if (!rt) {
-      // No refresh token at all → definitely not logged in
       setUser(null);
       setAccessToken(null);
       setLoading(false);
@@ -72,15 +76,25 @@ export function AuthProvider({ children }) {
         .catch(() => {/* keep existing user */});
       scheduleRefresh();
     } catch (err) {
-      const status = err?.status || (err?.message?.includes('401') ? 401 : 0);
-      if (status === 401 || status === 403 ||
-          err?.message?.includes('expired') || err?.message?.includes('revoked') ||
-          err?.message?.includes('Token')) {
-        // Genuine auth failure — clear everything
+      const msg = err?.message || '';
+
+      // Only a cryptographically invalid JWT warrants a forced logout.
+      // "Invalid or expired refresh token" = jwt.verify() failed = truly invalid.
+      // Everything else (network, server restart, DB wipe) = keep user, retry.
+      const isJwtInvalid = msg.includes('Invalid or expired refresh token');
+
+      if (isJwtInvalid) {
+        // Genuine JWT failure — token is forged or past 7-day window
         _clearSession();
+      } else if (!isRetry) {
+        // First failure — could be a server cold-start or fluke. Retry once after 4 s.
+        setTimeout(() => silentRefresh(true), 4000);
+        // Don't clear loading — AuthGate will show spinner until retry resolves
+        return;
       }
-      // Network error / 5xx → keep user from localStorage, try again later
-      // (user stays logged in visually, API calls will fail silently)
+      // If retry also failed with a non-JWT error, keep the user from localStorage.
+      // They'll appear logged in; authenticated API calls may fail silently until
+      // the server recovers or they manually log in again.
     } finally {
       setLoading(false);
     }

@@ -104,34 +104,52 @@ router.post('/login', [
 /**
  * POST /api/auth/refresh
  * Body: { refreshToken }
+ *
+ * Security model:
+ *  - JWT signature + expiry is the primary gate (cryptographic).
+ *  - DB lookup is used for optional token rotation but is NOT required
+ *    for success. This makes the endpoint resilient to server restarts
+ *    that wipe the refresh_tokens table (e.g. Railway without a Volume).
+ *  - Only a forged or truly expired JWT causes a 401.
  */
 router.post('/refresh', (req, res) => {
   const { refreshToken } = req.body;
   if (!refreshToken) return sendError(res, 'Refresh token required', 400);
 
   try {
+    // Step 1: Cryptographic validation — rejects forged/expired tokens
     const payload = jwt.verify(refreshToken, JWT_SECRET);
     if (payload.type !== 'refresh') return sendError(res, 'Invalid token type', 401);
 
     const db = getDb();
-    const stored = db.prepare(
-      'SELECT * FROM refresh_tokens WHERE token_hash = ? AND expires_at > datetime("now")'
-    ).get(hashToken(refreshToken));
-    if (!stored) return sendError(res, 'Token revoked or expired', 401);
 
-    const user = db.prepare('SELECT id, email, username, role, bio, created_at FROM users WHERE id = ?').get(payload.sub);
+    // Step 2: User must exist in DB
+    const user = db.prepare(
+      'SELECT id, email, username, role, bio, created_at FROM users WHERE id = ?'
+    ).get(payload.sub);
     if (!user) return sendError(res, 'User not found', 401);
 
-    // Rotate: delete old, issue new
-    db.prepare('DELETE FROM refresh_tokens WHERE token_hash = ?').run(hashToken(refreshToken));
-    const newAccess = signAccessToken(user);
+    // Step 3: Rotate token if it's still in the DB (optional — don't fail if missing)
+    // Token may be absent after a server restart that wiped the DB — that's OK
+    // because the JWT signature already proves authenticity.
+    const tokenHash = hashToken(refreshToken);
+    const stored = db.prepare(
+      'SELECT id FROM refresh_tokens WHERE token_hash = ? AND expires_at > datetime("now")'
+    ).get(tokenHash);
+    if (stored) {
+      db.prepare('DELETE FROM refresh_tokens WHERE token_hash = ?').run(tokenHash);
+    }
+
+    // Step 4: Issue new tokens
+    const newAccess  = signAccessToken(user);
     const newRefresh = signRefreshToken(user.id);
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    const expiresAt  = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
     db.prepare('INSERT INTO refresh_tokens (user_id, token_hash, expires_at) VALUES (?, ?, ?)')
       .run(user.id, hashToken(newRefresh), expiresAt);
 
     sendSuccess(res, { accessToken: newAccess, refreshToken: newRefresh });
   } catch {
+    // jwt.verify() threw → token is forged or past the 7-day expiry window
     sendError(res, 'Invalid or expired refresh token', 401);
   }
 });
