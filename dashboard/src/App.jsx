@@ -320,12 +320,33 @@ function HomePage() {
   );
 }
 
+/** Full-screen spinner shown while we're restoring the session on page load */
+function AuthGate({ children }) {
+  const { loading } = useAuth();
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-navy-900 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-400 to-cyan-500 flex items-center justify-center animate-pulse">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-navy-900">
+              <path d="M5.07 12.2a7 7 0 1 0 6.93-6.13" /><path d="M12 2v4" /><path d="m16.24 7.76 2.83-2.83" />
+            </svg>
+          </div>
+          <p className="text-sm text-gray-500">Loading InsightRadar…</p>
+        </div>
+      </div>
+    );
+  }
+  return children;
+}
+
 export default function App() {
   return (
     <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <BrowserRouter>
+          <AuthGate>
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/debate/:articleId" element={<DebatePage />} />
@@ -342,6 +363,7 @@ export default function App() {
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
+          </AuthGate>
         </BrowserRouter>
       </AuthProvider>
     </QueryClientProvider>

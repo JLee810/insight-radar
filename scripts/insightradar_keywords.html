@@ -1,0 +1,209 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans)}
+.wrap{padding:1rem 0}
+.tabs{display:flex;gap:8px;margin-bottom:1.5rem;flex-wrap:wrap}
+.tab{padding:6px 16px;border:0.5px solid var(--color-border-secondary);border-radius:20px;background:transparent;cursor:pointer;font-size:13px;color:var(--color-text-secondary);transition:all .15s}
+.tab.active{background:var(--color-text-primary);color:var(--color-background-primary);border-color:var(--color-text-primary)}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:1.5rem}
+.stat{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px}
+.stat-label{font-size:12px;color:var(--color-text-secondary);margin-bottom:4px}
+.stat-val{font-size:20px;font-weight:500}
+.stat-sub{font-size:11px;color:var(--color-text-tertiary);margin-top:2px}
+.kw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
+.kw{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);gap:8px}
+.kw-text{font-size:13px;color:var(--color-text-primary);flex:1}
+.kw-bar-wrap{width:60px;height:4px;background:var(--color-border-tertiary);border-radius:2px;flex-shrink:0}
+.kw-bar{height:4px;border-radius:2px}
+.kw-num{font-size:11px;color:var(--color-text-tertiary);min-width:28px;text-align:right;flex-shrink:0}
+.cat-head{font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-secondary);margin-bottom:10px}
+.export-btn{margin-top:1.5rem;padding:8px 20px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:transparent;cursor:pointer;font-size:13px;color:var(--color-text-primary)}
+.export-btn:hover{background:var(--color-background-secondary)}
+</style>
+<div class="wrap">
+<h2 class="sr-only">InsightRadar keyword library — 112 keywords across 4 categories</h2>
+<div class="stats">
+  <div class="stat"><div class="stat-label">Total keywords</div><div class="stat-val">112</div><div class="stat-sub">across 4 categories</div></div>
+  <div class="stat"><div class="stat-label">Politics</div><div class="stat-val">28</div><div class="stat-sub">avg weight 0.77</div></div>
+  <div class="stat"><div class="stat-label">Global Affairs</div><div class="stat-val">30</div><div class="stat-sub">avg weight 0.79</div></div>
+  <div class="stat"><div class="stat-label">Socio-Economic</div><div class="stat-val">27</div><div class="stat-sub">avg weight 0.72</div></div>
+  <div class="stat"><div class="stat-label">Education</div><div class="stat-val">27</div><div class="stat-sub">avg weight 0.68</div></div>
+</div>
+<div class="tabs">
+  <button class="tab active" onclick="show('ALL')">All</button>
+  <button class="tab" onclick="show('POLITICS')">Politics</button>
+  <button class="tab" onclick="show('GLOBAL AFFAIRS')">Global Affairs</button>
+  <button class="tab" onclick="show('SOCIO-ECONOMIC')">Socio-Economic</button>
+  <button class="tab" onclick="show('EDUCATION')">Education</button>
+</div>
+<div id="grid" class="kw-grid"></div>
+<button class="export-btn" onclick="exportJSON()">Download keywords.json</button>
+</div>
+<script>
+const COLORS={
+  'POLITICS':'#4a6fa5',
+  'GLOBAL AFFAIRS':'#2a9d8f',
+  'SOCIO-ECONOMIC':'#b8860b',
+  'EDUCATION':'#7b5ea7'
+};
+const KW=[
+  {"keyword":"electoral integrity","category":"POLITICS","weight":0.9},
+  {"keyword":"executive orders","category":"POLITICS","weight":0.9},
+  {"keyword":"legislative gridlock","category":"POLITICS","weight":0.85},
+  {"keyword":"political polarization","category":"POLITICS","weight":0.95},
+  {"keyword":"democratic backsliding","category":"POLITICS","weight":0.9},
+  {"keyword":"campaign finance reform","category":"POLITICS","weight":0.8},
+  {"keyword":"voter suppression","category":"POLITICS","weight":0.85},
+  {"keyword":"gerrymandering","category":"POLITICS","weight":0.8},
+  {"keyword":"lobbying regulation","category":"POLITICS","weight":0.75},
+  {"keyword":"Supreme Court ruling","category":"POLITICS","weight":0.95},
+  {"keyword":"constitutional amendment","category":"POLITICS","weight":0.85},
+  {"keyword":"populist movement","category":"POLITICS","weight":0.8},
+  {"keyword":"authoritarianism","category":"POLITICS","weight":0.9},
+  {"keyword":"parliamentary no-confidence vote","category":"POLITICS","weight":0.75},
+  {"keyword":"filibuster reform","category":"POLITICS","weight":0.7},
+  {"keyword":"midterm elections","category":"POLITICS","weight":0.85},
+  {"keyword":"political scandal","category":"POLITICS","weight":0.8},
+  {"keyword":"impeachment proceedings","category":"POLITICS","weight":0.9},
+  {"keyword":"redistricting","category":"POLITICS","weight":0.75},
+  {"keyword":"dark money politics","category":"POLITICS","weight":0.7},
+  {"keyword":"judicial appointments","category":"POLITICS","weight":0.8},
+  {"keyword":"federal budget reconciliation","category":"POLITICS","weight":0.85},
+  {"keyword":"party primary election","category":"POLITICS","weight":0.75},
+  {"keyword":"domestic surveillance policy","category":"POLITICS","weight":0.7},
+  {"keyword":"civil liberties legislation","category":"POLITICS","weight":0.75},
+  {"keyword":"disinformation campaigns","category":"POLITICS","weight":0.8},
+  {"keyword":"far-right nationalism","category":"POLITICS","weight":0.85},
+  {"keyword":"political asylum policy","category":"POLITICS","weight":0.7},
+
+  {"keyword":"UN Security Council resolution","category":"GLOBAL AFFAIRS","weight":1.0},
+  {"keyword":"NATO expansion","category":"GLOBAL AFFAIRS","weight":0.95},
+  {"keyword":"nuclear proliferation","category":"GLOBAL AFFAIRS","weight":1.0},
+  {"keyword":"DPRK missile program","category":"GLOBAL AFFAIRS","weight":0.95},
+  {"keyword":"sanctions regime","category":"GLOBAL AFFAIRS","weight":0.9},
+  {"keyword":"Indo-Pacific strategy","category":"GLOBAL AFFAIRS","weight":0.9},
+  {"keyword":"South China Sea dispute","category":"GLOBAL AFFAIRS","weight":0.9},
+  {"keyword":"ceasefire negotiations","category":"GLOBAL AFFAIRS","weight":0.85},
+  {"keyword":"humanitarian corridor","category":"GLOBAL AFFAIRS","weight":0.8},
+  {"keyword":"BRICS summit","category":"GLOBAL AFFAIRS","weight":0.85},
+  {"keyword":"G7 communiqué","category":"GLOBAL AFFAIRS","weight":0.85},
+  {"keyword":"international arms treaty","category":"GLOBAL AFFAIRS","weight":0.85},
+  {"keyword":"Arctic sovereignty","category":"GLOBAL AFFAIRS","weight":0.7},
+  {"keyword":"refugee crisis","category":"GLOBAL AFFAIRS","weight":0.9},
+  {"keyword":"foreign interference elections","category":"GLOBAL AFFAIRS","weight":0.85},
+  {"keyword":"climate diplomacy","category":"GLOBAL AFFAIRS","weight":0.8},
+  {"keyword":"intelligence sharing alliance","category":"GLOBAL AFFAIRS","weight":0.75},
+  {"keyword":"war crimes tribunal","category":"GLOBAL AFFAIRS","weight":0.85},
+  {"keyword":"proxy conflict","category":"GLOBAL AFFAIRS","weight":0.8},
+  {"keyword":"bilateral trade agreement","category":"GLOBAL AFFAIRS","weight":0.8},
+  {"keyword":"Eurasia security architecture","category":"GLOBAL AFFAIRS","weight":0.75},
+  {"keyword":"regime change","category":"GLOBAL AFFAIRS","weight":0.85},
+  {"keyword":"peacekeeping mission","category":"GLOBAL AFFAIRS","weight":0.8},
+  {"keyword":"export control regulation","category":"GLOBAL AFFAIRS","weight":0.75},
+  {"keyword":"failed state","category":"GLOBAL AFFAIRS","weight":0.8},
+  {"keyword":"cyber warfare","category":"GLOBAL AFFAIRS","weight":0.9},
+  {"keyword":"foreign military base","category":"GLOBAL AFFAIRS","weight":0.75},
+  {"keyword":"non-proliferation treaty","category":"GLOBAL AFFAIRS","weight":0.9},
+  {"keyword":"geopolitical realignment","category":"GLOBAL AFFAIRS","weight":0.85},
+  {"keyword":"diplomatic expulsion","category":"GLOBAL AFFAIRS","weight":0.8},
+
+  {"keyword":"income inequality","category":"SOCIO-ECONOMIC","weight":0.95},
+  {"keyword":"inflation rate","category":"SOCIO-ECONOMIC","weight":0.9},
+  {"keyword":"housing affordability crisis","category":"SOCIO-ECONOMIC","weight":0.9},
+  {"keyword":"labor market tightening","category":"SOCIO-ECONOMIC","weight":0.8},
+  {"keyword":"federal minimum wage","category":"SOCIO-ECONOMIC","weight":0.85},
+  {"keyword":"central bank interest rates","category":"SOCIO-ECONOMIC","weight":0.9},
+  {"keyword":"public debt ceiling","category":"SOCIO-ECONOMIC","weight":0.85},
+  {"keyword":"GDP growth forecast","category":"SOCIO-ECONOMIC","weight":0.85},
+  {"keyword":"supply chain disruption","category":"SOCIO-ECONOMIC","weight":0.8},
+  {"keyword":"food insecurity","category":"SOCIO-ECONOMIC","weight":0.85},
+  {"keyword":"gig economy regulation","category":"SOCIO-ECONOMIC","weight":0.7},
+  {"keyword":"automation job displacement","category":"SOCIO-ECONOMIC","weight":0.75},
+  {"keyword":"universal basic income","category":"SOCIO-ECONOMIC","weight":0.7},
+  {"keyword":"cryptocurrency regulation","category":"SOCIO-ECONOMIC","weight":0.75},
+  {"keyword":"wealth tax proposal","category":"SOCIO-ECONOMIC","weight":0.75},
+  {"keyword":"energy price shock","category":"SOCIO-ECONOMIC","weight":0.8},
+  {"keyword":"recession risk","category":"SOCIO-ECONOMIC","weight":0.85},
+  {"keyword":"healthcare cost crisis","category":"SOCIO-ECONOMIC","weight":0.85},
+  {"keyword":"social safety net","category":"SOCIO-ECONOMIC","weight":0.8},
+  {"keyword":"poverty rate","category":"SOCIO-ECONOMIC","weight":0.85},
+  {"keyword":"middle class decline","category":"SOCIO-ECONOMIC","weight":0.8},
+  {"keyword":"trade tariff impact","category":"SOCIO-ECONOMIC","weight":0.8},
+  {"keyword":"corporate tax policy","category":"SOCIO-ECONOMIC","weight":0.8},
+  {"keyword":"consumer price index","category":"SOCIO-ECONOMIC","weight":0.8},
+  {"keyword":"mortgage rate","category":"SOCIO-ECONOMIC","weight":0.75},
+  {"keyword":"social mobility barriers","category":"SOCIO-ECONOMIC","weight":0.75},
+  {"keyword":"pension reform","category":"SOCIO-ECONOMIC","weight":0.7},
+
+  {"keyword":"education funding cuts","category":"EDUCATION","weight":0.9},
+  {"keyword":"student loan debt","category":"EDUCATION","weight":0.95},
+  {"keyword":"AI in education","category":"EDUCATION","weight":0.85},
+  {"keyword":"teacher shortage","category":"EDUCATION","weight":0.9},
+  {"keyword":"higher education policy","category":"EDUCATION","weight":0.9},
+  {"keyword":"STEM curriculum","category":"EDUCATION","weight":0.8},
+  {"keyword":"academic freedom","category":"EDUCATION","weight":0.85},
+  {"keyword":"education inequality","category":"EDUCATION","weight":0.9},
+  {"keyword":"school voucher program","category":"EDUCATION","weight":0.75},
+  {"keyword":"EdTech investment","category":"EDUCATION","weight":0.7},
+  {"keyword":"standardized testing reform","category":"EDUCATION","weight":0.75},
+  {"keyword":"university research funding","category":"EDUCATION","weight":0.8},
+  {"keyword":"online learning platform","category":"EDUCATION","weight":0.7},
+  {"keyword":"early childhood education","category":"EDUCATION","weight":0.8},
+  {"keyword":"vocational training program","category":"EDUCATION","weight":0.75},
+  {"keyword":"literacy crisis","category":"EDUCATION","weight":0.8},
+  {"keyword":"curriculum politicization","category":"EDUCATION","weight":0.8},
+  {"keyword":"special education funding","category":"EDUCATION","weight":0.75},
+  {"keyword":"workforce skills gap","category":"EDUCATION","weight":0.8},
+  {"keyword":"college affordability","category":"EDUCATION","weight":0.85},
+  {"keyword":"international student visa","category":"EDUCATION","weight":0.65},
+  {"keyword":"school segregation","category":"EDUCATION","weight":0.75},
+  {"keyword":"lifelong learning policy","category":"EDUCATION","weight":0.6},
+  {"keyword":"book ban controversy","category":"EDUCATION","weight":0.7},
+  {"keyword":"tenure academic policy","category":"EDUCATION","weight":0.6},
+  {"keyword":"public school privatization","category":"EDUCATION","weight":0.75},
+  {"keyword":"graduate research grant","category":"EDUCATION","weight":0.65}
+];
+
+let current='ALL';
+function show(cat){
+  current=cat;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.textContent===(cat==='ALL'?'All':cat)));
+  render();
+}
+function render(){
+  const filtered=current==='ALL'?KW:KW.filter(k=>k.category===current);
+  const grid=document.getElementById('grid');
+  if(current==='ALL'){
+    const cats=['POLITICS','GLOBAL AFFAIRS','SOCIO-ECONOMIC','EDUCATION'];
+    grid.style.display='block';
+    grid.innerHTML=cats.map(cat=>{
+      const items=KW.filter(k=>k.category===cat);
+      return `<div style="margin-bottom:1.5rem">
+        <div class="cat-head" style="color:${COLORS[cat]}">${cat} — ${items.length} keywords</div>
+        <div class="kw-grid">${items.map(kwCard).join('')}</div>
+      </div>`;
+    }).join('');
+  } else {
+    grid.style.display='grid';
+    grid.innerHTML=filtered.map(kwCard).join('');
+  }
+}
+function kwCard(k){
+  const pct=Math.round(k.weight*100);
+  const col=COLORS[k.category];
+  return `<div class="kw">
+    <span class="kw-text">${k.keyword}</span>
+    <div class="kw-bar-wrap"><div class="kw-bar" style="width:${pct}%;background:${col}"></div></div>
+    <span class="kw-num">${k.weight.toFixed(1)}</span>
+  </div>`;
+}
+function exportJSON(){
+  const blob=new Blob([JSON.stringify(KW,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='keywords.json';
+  a.click();
+}
+render();
+</script>

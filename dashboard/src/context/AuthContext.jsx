@@ -1,56 +1,105 @@
 /**
  * AuthContext — global auth state.
- * Stores accessToken in memory, refreshToken in localStorage.
- * Auto-refreshes access token before expiry.
+ *
+ * Strategy:
+ *  - accessToken  → memory only (never touches storage, short-lived 15min)
+ *  - refreshToken → localStorage (7-day, survives tab close)
+ *  - user         → localStorage (instant restore on page refresh — no logout flash)
+ *
+ * On every page load:
+ *  1. Restore `user` from localStorage immediately (no flash to logged-out state)
+ *  2. Call /auth/refresh in background to get a fresh accessToken
+ *  3. If refresh succeeds  → fully authenticated, schedule next refresh
+ *  4. If refresh fails 401 → session truly expired, clear everything
+ *  5. If refresh fails network error → keep user from localStorage, retry later
  */
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { api } from '../services/api.js';
 
 const AuthContext = createContext(null);
 
+/* ── helpers ─────────────────────────────────────────────────────────── */
+
+function readUser() {
+  try { return JSON.parse(localStorage.getItem('user') || 'null'); } catch { return null; }
+}
+function saveUser(u) {
+  if (u) localStorage.setItem('user', JSON.stringify(u));
+  else    localStorage.removeItem('user');
+}
+
+/* ── provider ────────────────────────────────────────────────────────── */
+
 export function AuthProvider({ children }) {
-  const [user, setUser]               = useState(null);
+  // Restore user immediately from localStorage — prevents logout flash on refresh
+  const [user, setUser]               = useState(readUser);
   const [accessToken, setAccessToken] = useState(null);
+  // loading = true while we're verifying the session on startup
   const [loading, setLoading]         = useState(true);
   const refreshTimer                  = useRef(null);
 
-  /** Schedule access token refresh 1 min before 15-min expiry */
+  /** Sync user to localStorage whenever it changes */
+  useEffect(() => { saveUser(user); }, [user]);
+
+  /** Schedule silent token rotation 1 min before the 15-min expiry */
   function scheduleRefresh() {
     clearTimeout(refreshTimer.current);
-    refreshTimer.current = setTimeout(refreshAccess, 14 * 60 * 1000);
+    refreshTimer.current = setTimeout(silentRefresh, 14 * 60 * 1000);
   }
 
-  const refreshAccess = useCallback(async () => {
+  /**
+   * Try to get a fresh accessToken using the stored refreshToken.
+   * - 401/403 → genuine expiry → log out
+   * - Network/5xx error → keep existing user, don't log out
+   */
+  const silentRefresh = useCallback(async () => {
     const rt = localStorage.getItem('refreshToken');
-    if (!rt) { setLoading(false); return; }
+    if (!rt) {
+      // No refresh token at all → definitely not logged in
+      setUser(null);
+      setAccessToken(null);
+      setLoading(false);
+      return;
+    }
+
     try {
       const data = await api.auth.refresh(rt);
       setAccessToken(data.accessToken);
       localStorage.setItem('refreshToken', data.refreshToken);
+      // Fetch fresh user profile in background
+      api.auth.me(data.accessToken)
+        .then(u => setUser(u))
+        .catch(() => {/* keep existing user */});
       scheduleRefresh();
-    } catch {
-      // Refresh expired — log out silently
-      logout();
+    } catch (err) {
+      const status = err?.status || (err?.message?.includes('401') ? 401 : 0);
+      if (status === 401 || status === 403 ||
+          err?.message?.includes('expired') || err?.message?.includes('revoked') ||
+          err?.message?.includes('Token')) {
+        // Genuine auth failure — clear everything
+        _clearSession();
+      }
+      // Network error / 5xx → keep user from localStorage, try again later
+      // (user stays logged in visually, API calls will fail silently)
+    } finally {
+      setLoading(false);
     }
   }, []);
 
-  // On mount: try to restore session from stored refresh token
+  // Restore session on mount
   useEffect(() => {
-    refreshAccess().finally(() => setLoading(false));
+    silentRefresh();
     return () => clearTimeout(refreshTimer.current);
   }, []);
 
-  // After access token set, fetch user profile
-  useEffect(() => {
-    if (!accessToken) { setUser(null); return; }
-    api.auth.me(accessToken).then(setUser).catch(() => setUser(null));
-  }, [accessToken]);
+  /* ── public actions ──────────────────────────────────────────────────── */
 
   async function login(email, password) {
     const data = await api.auth.login(email, password);
     setAccessToken(data.accessToken);
     localStorage.setItem('refreshToken', data.refreshToken);
     setUser(data.user);
+    saveUser(data.user);
     scheduleRefresh();
     return data.user;
   }
@@ -60,6 +109,7 @@ export function AuthProvider({ children }) {
     setAccessToken(data.accessToken);
     localStorage.setItem('refreshToken', data.refreshToken);
     setUser(data.user);
+    saveUser(data.user);
     scheduleRefresh();
     return data.user;
   }
@@ -67,7 +117,12 @@ export function AuthProvider({ children }) {
   function logout() {
     const rt = localStorage.getItem('refreshToken');
     if (rt) api.auth.logout(rt).catch(() => {});
+    _clearSession();
+  }
+
+  function _clearSession() {
     localStorage.removeItem('refreshToken');
+    saveUser(null);
     setAccessToken(null);
     setUser(null);
     clearTimeout(refreshTimer.current);
