@@ -25,6 +25,7 @@ import SocialFeedPage from './pages/SocialFeedPage.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import { useAuth } from './context/AuthContext.jsx';
 import TrendingWidget from './components/TrendingWidget.jsx';
+import OpinionsWidget from './components/OpinionsWidget.jsx';
 import { useArticles, useCreateArticle } from './hooks/useArticles.js';
 import { LayoutGrid, Globe, Tag, Sparkles, Plus, X, BarChart2, Radio } from 'lucide-react';
 
@@ -268,7 +269,11 @@ function HomePage() {
 
       <div className="max-w-7xl mx-auto px-4 py-6 flex gap-6">
         {/* Sidebar — desktop only */}
-        <aside className="hidden md:block w-52 shrink-0 space-y-1 sticky top-20 h-fit">
+        <aside className="hidden md:block w-52 shrink-0 sticky top-20 h-fit space-y-1">
+          {/* Opinions widget — pinned to top */}
+          <OpinionsWidget />
+
+          {/* Nav tabs */}
           {tabs.map(t => (
             <NavTab
               key={t.id}
@@ -278,6 +283,7 @@ function HomePage() {
               onClick={() => t.link ? navigate(t.link) : setTab(t.id)}
             />
           ))}
+
           <div className="pt-4">
             <TrendingWidget />
           </div>

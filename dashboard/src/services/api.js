@@ -69,6 +69,7 @@ export const api = {
     get: (articleId) => request(`/bias/${articleId}`),
   },
   social: {
+    platformStatus: ()          => request('/social/platform-status'),
     sources:       ()           => request('/social/sources'),
     addSource:     (token, body) => authRequest(token, '/social/sources', { method: 'POST', body }),
     deleteSource:  (token, id)   => authRequest(token, `/social/sources/${id}`, { method: 'DELETE' }),

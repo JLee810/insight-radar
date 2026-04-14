@@ -16,7 +16,7 @@
 import { Router } from 'express';
 import { getDb } from '../db/database.js';
 import { sendSuccess, sendError, safeJsonParse } from '../utils/helpers.js';
-import { fetchSocialPosts } from '../services/social-scraper.js';
+import { fetchSocialPosts, getPlatformStatus } from '../services/social-scraper.js';
 import { checkSocialRelevance } from '../services/ai-analyzer.js';
 import { analyzeBias } from '../services/bias-analyzer.js';
 import { requireAuth } from '../middleware/auth.js';
@@ -38,6 +38,12 @@ function formatPost(row) {
     bias: safeJsonParse(row.bias_data, null),
   };
 }
+
+/* ── Platform status ─────────────────────────────────────────────────── */
+
+router.get('/platform-status', (req, res) => {
+  sendSuccess(res, getPlatformStatus());
+});
 
 /* ── Sources ─────────────────────────────────────────────────────────── */
 
@@ -63,7 +69,7 @@ router.post('/sources', async (req, res) => {
     const { platform, handle, display_name } = req.body;
     if (!platform || !handle) return sendError(res, 'platform and handle are required', 400);
 
-    const VALID = ['reddit', 'bluesky'];
+    const VALID = ['reddit', 'bluesky', 'x', 'instagram', 'facebook'];
     if (!VALID.includes(platform)) return sendError(res, `platform must be one of: ${VALID.join(', ')}`, 400);
 
     // Normalise handle

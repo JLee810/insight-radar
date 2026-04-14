@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Plus, Trash2, RefreshCw, X, Globe,
-  BookOpen, TrendingUp, Heart, ShieldAlert, Cpu,
+  BookOpen, TrendingUp, Heart, ShieldAlert, Cpu, Lock,
 } from 'lucide-react';
 import { api } from '../services/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -25,14 +25,20 @@ const CATEGORIES = [
   { id: 'technology',    label: 'Technology',    icon: Cpu },
 ];
 
-const PLATFORMS = [
-  { id: 'reddit',  label: 'Reddit',  placeholder: 'r/worldnews  or  r/economics' },
-  { id: 'bluesky', label: 'Bluesky', placeholder: 'user.bsky.social' },
+const ALL_PLATFORMS = [
+  { id: 'reddit',    label: 'Reddit',    placeholder: 'r/worldnews  or  u/username',  pill: 'bg-orange-500/15 text-orange-400 border-orange-500/25' },
+  { id: 'bluesky',   label: 'Bluesky',   placeholder: 'user.bsky.social',              pill: 'bg-sky-500/15 text-sky-400 border-sky-500/25'          },
+  { id: 'x',         label: 'X',         placeholder: '@username',                      pill: 'bg-gray-500/15 text-gray-300 border-gray-500/25'        },
+  { id: 'instagram', label: 'Instagram', placeholder: 'your_account',                  pill: 'bg-pink-500/15 text-pink-400 border-pink-500/25'        },
+  { id: 'facebook',  label: 'Facebook',  placeholder: 'page-name-or-id',               pill: 'bg-blue-600/15 text-blue-400 border-blue-600/25'        },
 ];
 
 const PLATFORM_PILL = {
-  reddit:  'bg-orange-500/15 text-orange-400 border border-orange-500/25',
-  bluesky: 'bg-sky-500/15    text-sky-400    border border-sky-500/25',
+  reddit:    'bg-orange-500/15 text-orange-400 border border-orange-500/25',
+  bluesky:   'bg-sky-500/15    text-sky-400    border border-sky-500/25',
+  x:         'bg-gray-500/15   text-gray-300   border border-gray-500/25',
+  instagram: 'bg-pink-500/15   text-pink-400   border border-pink-500/25',
+  facebook:  'bg-blue-600/15   text-blue-400   border border-blue-600/25',
 };
 
 /* ── Source manager panel ─────────────────────────────────────────────── */
@@ -48,6 +54,12 @@ function SourceManager({ onClose }) {
     queryKey: ['social-sources'],
     queryFn: api.social.sources,
     staleTime: 30_000,
+  });
+
+  const { data: platformStatus = {} } = useQuery({
+    queryKey: ['social-platform-status'],
+    queryFn: api.social.platformStatus,
+    staleTime: 60_000,
   });
 
   const addMutation = useMutation({
@@ -81,7 +93,9 @@ function SourceManager({ onClose }) {
     addMutation.mutate();
   }
 
-  const currentPlat = PLATFORMS.find(p => p.id === platform);
+  const currentPlat   = ALL_PLATFORMS.find(p => p.id === platform);
+  const currentStatus = platformStatus[platform];
+  const isLocked      = currentStatus && !currentStatus.available;
 
   return (
     <div className="card space-y-4">
@@ -93,50 +107,65 @@ function SourceManager({ onClose }) {
         </button>
       </div>
 
-      {/* Add form */}
-      <form onSubmit={handleAdd} className="space-y-2">
-        {/* Platform selector */}
-        <div className="flex gap-1">
-          {PLATFORMS.map(p => (
+      {/* Platform selector grid */}
+      <div className="grid grid-cols-5 gap-1">
+        {ALL_PLATFORMS.map(p => {
+          const status  = platformStatus[p.id];
+          const locked  = status && !status.available;
+          const active  = platform === p.id;
+          return (
             <button
               key={p.id}
               type="button"
               onClick={() => setPlatform(p.id)}
-              className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
-                platform === p.id
+              title={locked ? status.note : p.label}
+              className={`relative flex flex-col items-center gap-0.5 py-2 rounded-lg text-[11px] font-medium transition-colors border ${
+                active
                   ? 'bg-cyan-400/10 text-cyan-400 border-cyan-400/30'
-                  : 'text-gray-400 border-white/10 hover:border-white/20'
+                  : locked
+                  ? 'text-gray-600 border-white/5 cursor-pointer'
+                  : 'text-gray-400 border-white/10 hover:border-white/25 hover:text-gray-200'
               }`}
             >
               {p.label}
+              {locked && <Lock size={9} className="text-gray-600" />}
             </button>
-          ))}
-        </div>
+          );
+        })}
+      </div>
 
+      {/* Locked platform notice */}
+      {isLocked && (
+        <div className="bg-amber-900/20 border border-amber-500/20 rounded-lg px-3 py-2 text-xs text-amber-400">
+          <span className="font-semibold">Setup required:</span> {currentStatus.note}
+        </div>
+      )}
+
+      {/* Add form */}
+      <form onSubmit={handleAdd} className="space-y-2">
         <div className="flex gap-2">
           <input
             className="input flex-1 text-sm"
             placeholder={currentPlat?.placeholder}
             value={handle}
             onChange={e => setHandle(e.target.value)}
+            disabled={isLocked}
             required
           />
           <button
             type="submit"
             className="btn-primary shrink-0 flex items-center gap-1"
-            disabled={addMutation.isPending || !handle.trim()}
+            disabled={addMutation.isPending || !handle.trim() || isLocked}
           >
             <Plus size={14} />
             {addMutation.isPending ? 'Adding…' : 'Add'}
           </button>
         </div>
-
         {error && <p className="text-red-400 text-xs">{error}</p>}
       </form>
 
-      {/* Help text */}
-      <p className="text-[11px] text-gray-600 -mt-1">
-        Posts are auto-filtered by AI to keep only politics, economics, health, education &amp; tech content.
+      <p className="text-[11px] text-gray-600">
+        Posts are AI-filtered to politics, economics, health, education &amp; tech only.
       </p>
 
       {/* Source list */}
@@ -146,7 +175,7 @@ function SourceManager({ onClose }) {
         )}
         {sources.map(src => (
           <div key={src.id} className="flex items-center gap-2 py-1.5 px-2 rounded-lg hover:bg-white/5">
-            <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium shrink-0 ${PLATFORM_PILL[src.platform]}`}>
+            <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium shrink-0 border ${PLATFORM_PILL[src.platform]}`}>
               {src.platform}
             </span>
             <span className="text-sm text-white flex-1 min-w-0 truncate">{src.handle}</span>
