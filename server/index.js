@@ -20,6 +20,7 @@ import trendingRouter from './routes/trending.js';
 import adminRouter from './routes/admin.js';
 import opinionsRouter from './routes/opinions.js';
 import notificationsRouter from './routes/notifications.js';
+import socialRouter from './routes/social.js';
 import { analyzeArticle } from './services/ai-analyzer.js';
 import { startScheduler } from './services/scheduler.js';
 import { scrapeArticle } from './services/scraper.js';
@@ -48,6 +49,7 @@ app.use('/api/trending', trendingRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/opinions', opinionsRouter);
 app.use('/api/notifications', notificationsRouter);
+app.use('/api/social', socialRouter);
 app.use('/api/articles', articlesRouter);
 app.use('/api/websites', websitesRouter);
 app.use('/api/interests', interestsRouter);
@@ -170,6 +172,54 @@ _safeAlter('ALTER TABLE users ADD COLUMN data_consent BOOLEAN NOT NULL DEFAULT 0
 _safeAlter('ALTER TABLE users ADD COLUMN data_consent_at DATETIME');
 _safeAlter('ALTER TABLE users ADD COLUMN bio TEXT');
 _safeAlter('ALTER TABLE articles ADD COLUMN reaction_count INTEGER NOT NULL DEFAULT 0');
+
+// Social media tables
+getDb().exec(`
+  CREATE TABLE IF NOT EXISTS social_sources (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    platform       TEXT    NOT NULL,
+    handle         TEXT    NOT NULL,
+    display_name   TEXT,
+    check_interval INTEGER DEFAULT 3600,
+    last_checked   DATETIME,
+    is_active      BOOLEAN DEFAULT 1,
+    created_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(platform, handle)
+  );
+
+  CREATE TABLE IF NOT EXISTS social_posts (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    source_id       INTEGER REFERENCES social_sources(id),
+    platform        TEXT    NOT NULL,
+    external_id     TEXT    UNIQUE,
+    author          TEXT,
+    handle          TEXT,
+    content         TEXT    NOT NULL,
+    url             TEXT,
+    likes           INTEGER DEFAULT 0,
+    shares          INTEGER DEFAULT 0,
+    comments        INTEGER DEFAULT 0,
+    media_url       TEXT,
+    topic_category  TEXT    DEFAULT 'other',
+    relevance_score REAL    DEFAULT 0,
+    is_relevant     BOOLEAN DEFAULT 0,
+    bias_data       TEXT,
+    posted_at       DATETIME,
+    discovered_at   DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS social_comments (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    post_id    INTEGER REFERENCES social_posts(id)  ON DELETE CASCADE,
+    user_id    INTEGER REFERENCES users(id)         ON DELETE CASCADE,
+    content    TEXT    NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_social_posts_source   ON social_posts(source_id);
+  CREATE INDEX IF NOT EXISTS idx_social_posts_relevant ON social_posts(is_relevant, posted_at DESC);
+  CREATE INDEX IF NOT EXISTS idx_social_posts_category ON social_posts(topic_category);
+`);
 
 startScheduler();
 

@@ -3,6 +3,8 @@ import { getDb } from '../db/database.js';
 import { discoverArticleLinks, scrapeArticle } from './scraper.js';
 import { analyzeArticle } from './ai-analyzer.js';
 import { analyzeBias } from './bias-analyzer.js';
+import { fetchSocialPosts } from './social-scraper.js';
+import { checkSocialRelevance } from './ai-analyzer.js';
 
 // Map of website_id → cron task instance
 const tasks = new Map();
@@ -15,6 +17,10 @@ const tasks = new Map();
 export function startScheduler() {
   // Master tick: every minute, reconcile DB websites with running tasks
   cron.schedule('* * * * *', reconcileTasks);
+
+  // Refresh social sources every 2 hours
+  cron.schedule('0 */2 * * *', refreshSocialSources);
+
   console.log('Scheduler started.');
   reconcileTasks(); // Run immediately on startup
 }
@@ -157,6 +163,73 @@ async function checkWebsite(websiteId) {
  */
 export async function triggerCheck(websiteId) {
   return checkWebsite(websiteId);
+}
+
+/**
+ * Refresh all active social sources — fetch new posts, run AI topic filter.
+ */
+async function refreshSocialSources() {
+  try {
+    const db = getDb();
+    const sources = db.prepare('SELECT * FROM social_sources WHERE is_active = 1').all();
+    if (!sources.length) return;
+
+    console.log(`[social] Refreshing ${sources.length} source(s)…`);
+
+    const insert = db.prepare(`
+      INSERT INTO social_posts
+        (source_id, platform, external_id, author, handle, content, url,
+         likes, shares, comments, media_url, posted_at, topic_category, relevance_score, is_relevant)
+      VALUES
+        (@source_id, @platform, @external_id, @author, @handle, @content, @url,
+         @likes, @shares, @comments, @media_url, @posted_at, @topic_category, @relevance_score, @is_relevant)
+    `);
+
+    for (const source of sources) {
+      try {
+        const posts = await fetchSocialPosts(source);
+
+        for (const post of posts) {
+          const exists = db.prepare('SELECT id FROM social_posts WHERE external_id = ?').get(post.external_id);
+          if (exists) continue;
+
+          let topic_category = 'other', relevance_score = 0, is_relevant = 0;
+          try {
+            const check = await checkSocialRelevance({ content: `${post.title || ''} ${post.content || ''}` });
+            topic_category  = check.category;
+            relevance_score = check.relevance_score;
+            is_relevant     = check.is_relevant && check.relevance_score >= 35 ? 1 : 0;
+          } catch { /* keep defaults */ }
+
+          const { lastInsertRowid } = insert.run({
+            source_id: source.id, platform: source.platform,
+            external_id: post.external_id,
+            author:   (post.author  || '').slice(0, 100),
+            handle:   (post.handle  || '').slice(0, 100),
+            content:  (post.content || '').slice(0, 2000),
+            url: post.url || '', likes: post.likes || 0,
+            shares: post.shares || 0, comments: post.comments || 0,
+            media_url: post.media_url || null, posted_at: post.posted_at || null,
+            topic_category, relevance_score, is_relevant,
+          });
+
+          if (is_relevant) {
+            analyzeBias({ title: post.title || (post.content || '').slice(0, 120), content: post.content || '' })
+              .then(b => db.prepare('UPDATE social_posts SET bias_data = ? WHERE id = ?').run(JSON.stringify(b), lastInsertRowid))
+              .catch(() => {});
+          }
+
+          await sleep(500); // be respectful
+        }
+
+        db.prepare('UPDATE social_sources SET last_checked = CURRENT_TIMESTAMP WHERE id = ?').run(source.id);
+      } catch (err) {
+        console.warn(`[social] Failed to refresh source #${source.id}: ${err.message}`);
+      }
+    }
+  } catch (err) {
+    console.error('[social] Refresh error:', err.message);
+  }
 }
 
 /** @param {number} ms */

@@ -68,6 +68,17 @@ export const api = {
   bias: {
     get: (articleId) => request(`/bias/${articleId}`),
   },
+  social: {
+    sources:       ()           => request('/social/sources'),
+    addSource:     (token, body) => authRequest(token, '/social/sources', { method: 'POST', body }),
+    deleteSource:  (token, id)   => authRequest(token, `/social/sources/${id}`, { method: 'DELETE' }),
+    posts:         (params = {}) => request(`/social/posts?${new URLSearchParams(params)}`),
+    refresh:       (token, source_id) => authRequest(token, '/social/refresh', { method: 'POST', body: source_id ? { source_id } : {} }),
+    getBias:       (postId)      => request(`/social/posts/${postId}/bias`),
+    getComments:   (postId)      => request(`/social/posts/${postId}/comments`),
+    addComment:    (token, postId, content) => authRequest(token, `/social/posts/${postId}/comments`, { method: 'POST', body: { content } }),
+    deleteComment: (token, id)   => authRequest(token, `/social/comments/${id}`, { method: 'DELETE' }),
+  },
   trending: () => request('/trending'),
   admin: {
     stats:            (token) => authRequest(token, '/admin/stats'),

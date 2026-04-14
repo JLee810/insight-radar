@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { api } from './services/api.js';
 import { AuthProvider } from './context/AuthContext.jsx';
@@ -21,11 +21,12 @@ import TagPage from './pages/TagPage.jsx';
 import NotFoundPage from './pages/NotFoundPage.jsx';
 import ResetPasswordPage from './pages/ResetPasswordPage.jsx';
 import HistoryPage from './pages/HistoryPage.jsx';
+import SocialFeedPage from './pages/SocialFeedPage.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import { useAuth } from './context/AuthContext.jsx';
 import TrendingWidget from './components/TrendingWidget.jsx';
 import { useArticles, useCreateArticle } from './hooks/useArticles.js';
-import { LayoutGrid, Globe, Tag, Sparkles, Plus, X, BarChart2 } from 'lucide-react';
+import { LayoutGrid, Globe, Tag, Sparkles, Plus, X, BarChart2, Radio } from 'lucide-react';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
@@ -51,7 +52,7 @@ function BottomTab({ icon: Icon, label, active, onClick }) {
       onClick={onClick}
       className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-medium transition-colors ${active ? 'text-cyan-400' : 'text-gray-500'}`}
     >
-      <Icon size={20} strokeWidth={active ? 2.5 : 1.8} />
+      <Icon size={18} strokeWidth={active ? 2.5 : 1.8} />
       {label}
     </button>
   );
@@ -247,24 +248,35 @@ function HomePage() {
   const [tab, setTab] = useState('articles');
   const [searchQuery, setSearchQuery] = useState('');
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const tabs = [
-    { id: 'articles', icon: LayoutGrid, label: 'Articles' },
-    { id: 'foryou', icon: Sparkles, label: 'For You' },
-    { id: 'websites', icon: Globe, label: 'Websites' },
-    { id: 'interests', icon: Tag, label: 'Interests' },
-    { id: 'insights', icon: BarChart2, label: 'Insights' },
+    { id: 'articles',  icon: LayoutGrid, label: 'Articles' },
+    { id: 'foryou',    icon: Sparkles,   label: 'For You' },
+    { id: 'social',    icon: Radio,      label: 'Social',  link: '/social' },
+    { id: 'websites',  icon: Globe,      label: 'Websites' },
+    { id: 'interests', icon: Tag,        label: 'Interests' },
+    { id: 'insights',  icon: BarChart2,  label: 'Insights' },
   ];
 
   return (
     <div className="min-h-screen bg-navy-900">
-      <Header onSearch={q => { setSearchQuery(q); setTab('articles'); }} />
+      <Header
+        onSearch={q => { setSearchQuery(q); setTab('articles'); }}
+        onLogoClick={() => setTab('articles')}
+      />
 
       <div className="max-w-7xl mx-auto px-4 py-6 flex gap-6">
         {/* Sidebar — desktop only */}
         <aside className="hidden md:block w-52 shrink-0 space-y-1 sticky top-20 h-fit">
           {tabs.map(t => (
-            <NavTab key={t.id} icon={t.icon} label={t.label} active={tab === t.id} onClick={() => setTab(t.id)} />
+            <NavTab
+              key={t.id}
+              icon={t.icon}
+              label={t.label}
+              active={tab === t.id}
+              onClick={() => t.link ? navigate(t.link) : setTab(t.id)}
+            />
           ))}
           <div className="pt-4">
             <TrendingWidget />
@@ -289,7 +301,13 @@ function HomePage() {
       {/* Bottom nav — mobile only */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 bg-navy-900/95 backdrop-blur border-t border-white/8 flex md:hidden safe-bottom">
         {tabs.map(t => (
-          <BottomTab key={t.id} icon={t.icon} label={t.label} active={tab === t.id} onClick={() => setTab(t.id)} />
+          <BottomTab
+            key={t.id}
+            icon={t.icon}
+            label={t.label}
+            active={tab === t.id}
+            onClick={() => t.link ? navigate(t.link) : setTab(t.id)}
+          />
         ))}
       </nav>
     </div>
@@ -314,6 +332,7 @@ export default function App() {
             <Route path="/bookmarks" element={<BookmarksPage />} />
             <Route path="/tag/:tag" element={<TagPage />} />
             <Route path="/history" element={<HistoryPage />} />
+            <Route path="/social" element={<SocialFeedPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>

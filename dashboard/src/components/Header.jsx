@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Bell, Radar, LogIn, LogOut, User, Settings, PenLine, ShieldAlert, X, Bookmark, Sun, Moon, MessageSquare, Flame, Clock, Menu } from 'lucide-react';
+import { Search, Bell, Radar, LogIn, LogOut, User, Settings, PenLine, ShieldAlert, X, Bookmark, Sun, Moon, MessageSquare, Flame, Clock, Menu, Radio } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../services/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -129,6 +129,7 @@ function MobileMenu({ user, onClose, onLogin, onLogout, toggleTheme, isDark }) {
           {[
             { to: '/', icon: <Radar size={17} />, label: 'Home' },
             { to: '/search', icon: <Search size={17} />, label: 'Search' },
+            { to: '/social',   icon: <Radio size={17} className="text-cyan-400" />, label: 'Social Feed' },
             { to: '/opinions', icon: <PenLine size={17} />, label: 'Opinions' },
             { to: '/bookmarks', icon: <Bookmark size={17} />, label: 'Bookmarks' },
             { to: '/history', icon: <Clock size={17} />, label: 'Reading History' },
@@ -196,7 +197,7 @@ function useTheme() {
   return { isDark, toggle: () => setIsDark(v => !v) };
 }
 
-export default function Header({ onSearch }) {
+export default function Header({ onSearch, onLogoClick }) {
   const [query, setQuery] = useState('');
   const [authModal, setAuthModal] = useState(null);
   const [showNotif, setShowNotif] = useState(false);
@@ -233,7 +234,11 @@ export default function Header({ onSearch }) {
         <div className="max-w-7xl mx-auto flex items-center gap-3">
 
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 shrink-0 hover:opacity-80 transition-opacity">
+          <Link
+            to="/"
+            onClick={onLogoClick}
+            className="flex items-center gap-2 shrink-0 hover:opacity-80 transition-opacity"
+          >
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-cyan-500 flex items-center justify-center">
               <Radar size={18} className="text-navy-900" />
             </div>
