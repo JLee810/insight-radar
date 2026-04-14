@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { getDb } from '../db/database.js';
 import { sendSuccess, sendError, formatWebsite } from '../utils/helpers.js';
 import { requireAuth } from '../middleware/auth.js';
+import { triggerCheck } from '../services/scheduler.js';
 
 const router = Router();
 
@@ -71,6 +72,24 @@ router.patch('/:id', (req, res) => {
 
     const updated = db.prepare('SELECT * FROM websites WHERE id = ?').get(req.params.id);
     sendSuccess(res, formatWebsite(updated));
+  } catch (err) {
+    sendError(res, err.message);
+  }
+});
+
+/**
+ * POST /api/websites/:id/check
+ * Immediately trigger an article fetch for this website (runs in background).
+ */
+router.post('/:id/check', async (req, res) => {
+  try {
+    const db = getDb();
+    const website = db.prepare('SELECT * FROM websites WHERE id = ? AND user_id = ?').get(req.params.id, req.user.id);
+    if (!website) return sendError(res, 'Website not found', 404);
+
+    // Kick off asynchronously — don't wait for it to finish
+    triggerCheck(website.id).catch(err => console.error(`Manual check failed for #${website.id}:`, err.message));
+    sendSuccess(res, { triggered: true, websiteId: website.id, name: website.name });
   } catch (err) {
     sendError(res, err.message);
   }

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Trash2, ToggleLeft, ToggleRight, Clock, Pencil, Check, X } from 'lucide-react';
+import { Plus, Trash2, ToggleLeft, ToggleRight, Clock, Pencil, Check, X, RefreshCw } from 'lucide-react';
 import { api } from '../services/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -28,6 +28,14 @@ export default function WebsiteList() {
   const deleteMutation = useMutation({
     mutationFn: (id) => api.websites.delete(accessToken, id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['websites', accessToken] }),
+  });
+
+  const checkMutation = useMutation({
+    mutationFn: (id) => api.websites.check(accessToken, id),
+    onSuccess: () => {
+      // Refresh articles list after a short delay to let the background check run
+      setTimeout(() => qc.invalidateQueries({ queryKey: ['articles'] }), 8000);
+    },
   });
 
   const [form, setForm] = useState({ url: '', name: '', check_interval: 3600 });
@@ -157,6 +165,15 @@ export default function WebsiteList() {
                     <Clock size={12} />
                     {intervals.find(i => i.value === site.check_interval)?.label || `${site.check_interval}s`}
                   </div>
+
+                  <button
+                    className="p-1 hover:text-cyan-400 transition-colors shrink-0"
+                    onClick={() => checkMutation.mutate(site.id)}
+                    disabled={checkMutation.isPending && checkMutation.variables === site.id}
+                    title="Fetch articles now"
+                  >
+                    <RefreshCw size={13} className={checkMutation.isPending && checkMutation.variables === site.id ? 'animate-spin text-cyan-400' : ''} />
+                  </button>
 
                   <button
                     className="p-1 hover:text-cyan-400 transition-colors shrink-0"

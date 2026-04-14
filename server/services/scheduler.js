@@ -1,6 +1,6 @@
 import cron from 'node-cron';
 import { getDb } from '../db/database.js';
-import { discoverArticleLinks, scrapeArticle } from './scraper.js';
+import { discoverWithMetadata, scrapeArticle } from './scraper.js';
 import { analyzeArticle } from './ai-analyzer.js';
 import { analyzeBias } from './bias-analyzer.js';
 import { fetchSocialPosts } from './social-scraper.js';
@@ -92,16 +92,42 @@ async function checkWebsite(websiteId) {
   let errorMessage = null;
 
   try {
-    const links = await discoverArticleLinks(website.url);
+    const items = await discoverWithMetadata(website.url);
     const interests = db.prepare('SELECT keyword FROM interests').all().map(r => r.keyword);
 
-    for (const link of links) {
+    for (const item of items) {
+      const link = item.url;
       // Skip already-known articles
       const exists = db.prepare('SELECT id FROM articles WHERE url = ?').get(link);
       if (exists) continue;
 
       try {
-        const scraped = await scrapeArticle(link);
+        // Try full scrape first; fall back to prefetched RSS metadata on failure
+        let scraped;
+        try {
+          scraped = await scrapeArticle(link);
+          // If scrape returned a near-empty title but RSS gave us a real one, prefer RSS
+          if (item.title && (!scraped.title || scraped.title === 'Untitled')) {
+            scraped.title = item.title;
+          }
+          if (item.description && !scraped.description) {
+            scraped.description = item.description;
+          }
+          if (item.publishedAt && !scraped.publishedAt) {
+            scraped.publishedAt = item.publishedAt;
+          }
+        } catch (scrapeErr) {
+          // Scrape failed — use RSS metadata as fallback if available
+          if (!item.title) throw scrapeErr; // nothing to fall back to
+          scraped = {
+            title: item.title,
+            content: item.description || '',
+            description: item.description || null,
+            author: null,
+            publishedAt: item.publishedAt || null,
+          };
+        }
+
         let aiResult = { summary: '', relevance_score: 0, tags: [], insight: '' };
 
         if (interests.length > 0) {

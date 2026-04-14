@@ -37,6 +37,7 @@ export const api = {
     create: (token, body) => authRequest(token, '/websites', { method: 'POST', body }),
     update: (token, id, body) => authRequest(token, `/websites/${id}`, { method: 'PATCH', body }),
     delete: (token, id) => authRequest(token, `/websites/${id}`, { method: 'DELETE' }),
+    check: (token, id) => authRequest(token, `/websites/${id}/check`, { method: 'POST' }),
   },
   interests: {
     list: (token) => authRequest(token, '/interests'),
